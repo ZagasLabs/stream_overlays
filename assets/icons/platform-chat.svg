@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Chat">
+  <path fill="#fff" d="M8 10h48v34H30L17 56v-12H8z"/>
+  <path fill="#050505" d="M14 16h36v22H27l-4 4v-4h-9z"/>
+  <path fill="#fff" d="M20 23h25v4H20zm0 8h18v4H20z"/>
+</svg>

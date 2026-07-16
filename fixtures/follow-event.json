@@ -1,0 +1,11 @@
+{
+  "fixtureName": "Follow",
+  "id": "fixture-follow",
+  "type": "facebook",
+  "sourceName": "Facebook",
+  "chatname": "MaraV",
+  "chatmessage": "started following",
+  "event": "follow",
+  "chatimg": "",
+  "chatbadges": []
+}

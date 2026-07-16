@@ -1,0 +1,12 @@
+{
+  "fixtureName": "Long",
+  "id": "fixture-long",
+  "type": "twitch",
+  "sourceName": "Twitch",
+  "chatname": "UltraLongDisplayName_WithSymbols",
+  "chatmessage": "International long message test: hola, こんにちは, 안녕하세요, مرحبا, emojis 😄🔥✨ and a deliberately long sentence that should wrap cleanly without breaking the comic panel layout or overlapping nearby cards.",
+  "chatimg": "",
+  "chatbadges": [
+    { "label": "vip" }
+  ]
+}

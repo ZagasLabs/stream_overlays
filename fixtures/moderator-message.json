@@ -1,0 +1,13 @@
+{
+  "fixtureName": "Moderator",
+  "id": "fixture-moderator",
+  "type": "twitch",
+  "sourceName": "Twitch",
+  "chatname": "Pcomusa",
+  "chatmessage": "Is this moderator test message?",
+  "moderator": true,
+  "chatimg": "",
+  "chatbadges": [
+    { "label": "mod" }
+  ]
+}

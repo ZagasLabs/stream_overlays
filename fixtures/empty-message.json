@@ -1,0 +1,7 @@
+{
+  "fixtureName": "Ignored empty message",
+  "type": "youtube",
+  "chatname": "EmptyAuthor",
+  "chatmessage": "",
+  "chatimg": "https://example.invalid/avatar.png"
+}

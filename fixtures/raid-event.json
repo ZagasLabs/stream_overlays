@@ -1,0 +1,12 @@
+{
+  "fixtureName": "Raid",
+  "id": "fixture-raid",
+  "type": "twitch",
+  "sourceName": "Twitch",
+  "chatname": "Blaeshop",
+  "chatmessage": "raided with 42 viewers",
+  "event": "raid",
+  "title": "Raid",
+  "chatimg": "",
+  "chatbadges": []
+}

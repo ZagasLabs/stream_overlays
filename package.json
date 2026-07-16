@@ -1,0 +1,18 @@
+{
+  "name": "p5chatoverlay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static OBS Browser Source chat overlay for Social Stream Ninja.",
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs",
+    "mock": "node scripts/dev-server.mjs --mock",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check src/app.js && node --check src/config.js && node --check src/ssn-client.js && node --check src/message-normalizer.js && node --check src/message-renderer.js && node --check src/layout-manager.js && node --check src/sanitizer.js && node --check scripts/dev-server.mjs && node --check scripts/print-url.mjs && node --check scripts/preflight.mjs && npm run test",
+    "preflight": "node scripts/preflight.mjs",
+    "url": "node scripts/print-url.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

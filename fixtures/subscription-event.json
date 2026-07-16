@@ -1,0 +1,14 @@
+{
+  "fixtureName": "Subscription",
+  "id": "fixture-subscription",
+  "type": "youtube",
+  "sourceName": "YouTube",
+  "chatname": "Felicia",
+  "chatmessage": "just resubbed x13 times!",
+  "event": "subscription",
+  "membership": "subscriber",
+  "chatimg": "",
+  "chatbadges": [
+    { "label": "subscriber" }
+  ]
+}

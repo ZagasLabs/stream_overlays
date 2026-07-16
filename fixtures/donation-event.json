@@ -1,0 +1,12 @@
+{
+  "fixtureName": "Donation",
+  "id": "fixture-donation",
+  "type": "youtube",
+  "sourceName": "YouTube",
+  "chatname": "Ina_test",
+  "chatmessage": "For the late night stream fund!",
+  "title": "Super Chat",
+  "hasDonation": "$25.00",
+  "chatimg": "",
+  "chatbadges": []
+}
