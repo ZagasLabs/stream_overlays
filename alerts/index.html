@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Unified Stream Alerts</title>
+    <link rel="stylesheet" href="../shared/design/tokens.css">
+    <link rel="stylesheet" href="./src/styles.css">
+  </head>
+  <body>
+    <main id="overlay" class="alerts-overlay" aria-live="polite" aria-atomic="true">
+      <section id="stage" class="alert-stage" aria-label="Stream alerts"></section>
+      <aside id="debug-panel" class="debug-panel" hidden aria-label="Alerts mock and debug controls"></aside>
+      <div id="diagnostic" class="diagnostic" hidden></div>
+    </main>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

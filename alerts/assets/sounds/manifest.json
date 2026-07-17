@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "tiers": {
+    "minor": null,
+    "standard": null,
+    "major": null
+  },
+  "events": {
+    "follow": null,
+    "subscription": null,
+    "resubscription": null,
+    "membership": null,
+    "gift": null,
+    "raid": null,
+    "donation": null,
+    "bits": null,
+    "superchat": null,
+    "milestone": null,
+    "generic-event": null
+  }
+}

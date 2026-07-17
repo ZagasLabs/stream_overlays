@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <title>Comic Chat Overlay</title>
+    <link rel="stylesheet" href="../src/styles.css">
+  </head>
+  <body>
+    <main id="overlay" class="overlay" aria-live="polite" aria-atomic="false">
+      <section id="chat-column" class="chat-column" role="list" aria-label="Live chat messages"></section>
+      <aside id="debug-panel" class="debug-panel" hidden aria-label="Overlay debug controls"></aside>
+    </main>
+    <script type="module" src="../src/app.js"></script>
+  </body>
+</html>

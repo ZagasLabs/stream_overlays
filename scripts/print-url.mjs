@@ -1,9 +1,11 @@
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { buildOverlayUrl } from "../src/url-utils.js";
 
 const args = parseArgs(process.argv.slice(2));
 const session = args.session;
 const production = Boolean(args.production);
+const app = sanitizeApp(args.app || "");
 
 if (!session && !args.mock) {
   fail("Usage: npm run url -- --session SESSION_ID [--production] [--side right] [--max 6] [--duration 18000]");
@@ -15,11 +17,11 @@ if (!base) {
 }
 
 const params = {};
-for (const key of ["side", "accent", "max", "duration", "eventDuration", "scale", "debug", "mock", "reduceMotion", "showPlatform", "showBadges", "showAvatar"]) {
+for (const key of ["side", "position", "accent", "max", "duration", "eventDuration", "scale", "debug", "mock", "reduceMotion", "showPlatform", "showBadges", "showAvatar", "showParticipant", "lang", "command", "maxAttempts", "wordLength", "userCooldown", "globalCooldown", "admins", "accents", "sound", "volume", "minorDuration", "standardDuration", "majorDuration", "minorPriority", "standardPriority", "majorPriority", "minorVolume", "standardVolume", "majorVolume"]) {
   if (args[key] !== undefined) params[key] = args[key];
 }
 
-const url = buildOverlayUrl({ base, session, production, params });
+const url = buildOverlayUrl({ base, path: app ? `${app}/` : "", session, production, params });
 if (process.env.CI && session) {
   console.log(url.replace(encodeURIComponent(session), "SESSION_ID"));
 } else {
@@ -50,6 +52,14 @@ function detectPagesBaseUrl() {
     if (owner && repo) return `https://${owner}.github.io/${repo}/`;
   }
   try {
+    const metadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+    if (typeof metadata.homepage === "string" && /^https:\/\/[a-z0-9-]+\.github\.io\/[a-z0-9._-]+\/?$/i.test(metadata.homepage)) {
+      return ensureTrailingSlash(metadata.homepage);
+    }
+  } catch {
+    // Fall through to the git remote when package metadata is unavailable.
+  }
+  try {
     const remote = execFileSync("git", ["config", "--get", "remote.origin.url"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
     const match = remote.match(/github\.com[:/](?<owner>[^/]+)\/(?<repo>[^/.]+)(?:\.git)?$/);
     if (match?.groups) return `https://${match.groups.owner}.github.io/${match.groups.repo}/`;
@@ -61,6 +71,13 @@ function detectPagesBaseUrl() {
 
 function ensureTrailingSlash(value) {
   return value.endsWith("/") ? value : `${value}/`;
+}
+
+function sanitizeApp(value) {
+  const appName = String(value || "").trim().replace(/^\/+|\/+$/g, "");
+  if (!appName) return "";
+  if (!["chat", "wordlestream", "alerts"].includes(appName)) fail("Unknown overlay app. Use chat, wordlestream or alerts.");
+  return appName;
 }
 
 function fail(message) {

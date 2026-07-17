@@ -1,115 +1,90 @@
-# Comic Chat Overlay for OBS
+# OBS Overlay Monorepo
 
-Static animated multi-platform chat overlay for OBS Browser Source, powered by Social Stream Ninja. The design is an original high-contrast comic dialogue system with compact connected panels, skewed avatar frames, angular author labels, and event-specific compositions.
+Three dependency-free static Browser Source overlays share one GitHub Pages deployment:
 
-## 1. Requirements
+- `/chat/` — the Social Stream Ninja comic chat.
+- `/wordlestream/` — a cooperative multilingual word game.
+- `/alerts/` — normalized multi-platform alerts with managed procedural or locally customized audio.
 
-- Node.js 20 or newer.
-- OBS 32.x.
-- Social Stream Ninja Session ID for live use.
+All runtime configuration is read from the URL fragment. A Social Stream Ninja Session ID is never hard-coded, stored, logged, included in fixtures, or sent to CI.
 
-No runtime framework, backend, database, Docker, CDN scripts, analytics, or remote fonts are used.
+## Requirements and commands
 
-## 2. Install Development Dependencies
-
-There are no package dependencies, but run install once if you want npm to create a lockfile:
+Use Node.js 24 or newer. There are no package dependencies.
 
 ```sh
-npm install
-```
+npm run dev                 # all apps, chat URL printed
+npm run dev:chat
+npm run dev:wordle
+npm run dev:alerts
+npm run mock:chat
+npm run mock:wordle
+npm run mock:alerts
 
-## 3. Run Mock Mode
-
-```sh
-npm run mock
-```
-
-Open:
-
-```text
-http://127.0.0.1:8765/#mock=1&debug=1
-```
-
-## 4. Run Tests
-
-```sh
 npm run test
+npm run test:wordle
+npm run test:alerts
 npm run check
 npm run preflight
+npm run build:pages
 ```
 
-## 5. Configure A Real SSN Session Locally
+The server always binds to `127.0.0.1:8765`. Mock URLs are:
 
-Start the static server:
-
-```sh
-npm run dev
+```text
+http://127.0.0.1:8765/chat/#mock=1&debug=1
+http://127.0.0.1:8765/wordlestream/#mock=1&debug=1
+http://127.0.0.1:8765/alerts/#mock=1&debug=1
 ```
 
-Generate a private local URL:
+## Private URL generation
+
+Run these commands only when you intend to print a private URL:
 
 ```sh
 npm run url -- --session SESSION_ID
-```
+npm run url:wordle -- --session SESSION_ID
+npm run url:alerts -- --session SESSION_ID
 
-The Session ID is placed in the fragment and is not stored by the project.
-
-## 6. Deploy To GitHub Pages
-
-The included workflow deploys the static site from the default branch using GitHub Pages actions. Enable GitHub Pages in repository settings and select GitHub Actions as the source.
-
-No Session ID is required in GitHub Actions.
-
-## 7. Generate The OBS URL
-
-For a production URL, run this from a GitHub repository with `origin` set, or provide `PAGES_BASE_URL`:
-
-```sh
 npm run url -- --session SESSION_ID --production
+npm run url:wordle -- --session SESSION_ID --production
+npm run url:alerts -- --session SESSION_ID --production
 ```
 
-Optional parameters:
+The production base is declared in package metadata as `https://zagaslabs.github.io/stream_overlays/`; `PAGES_BASE_URL` or `GITHUB_REPOSITORY` can override it for forks and CI. CI redacts a supplied session defensively, though CI never needs one.
 
-```sh
-npm run url -- --session SESSION_ID --production --side left --max 5 --duration 16000 --accent "#ff003c"
-```
+## Configuration
 
-## 8. Add It To OBS
+Common settings include `session`, `accent`, `scale`, `debug`, `mock`, `reduceMotion`, and visibility options. Values are validated and bounded; fragment values never become HTML, CSS declarations, or asset paths.
 
-Add a Browser Source and use the generated URL. Recommended source size:
+WordleStream adds `lang=en|es`, `command=!w,!word`, `maxAttempts=3..10`, `wordLength=4..8`, cooldowns in seconds, `admins=platform:identity`, `accents=fold|preserve`, and optional low-volume `sound`/`volume`. See [WordleStream](wordlestream/README.md).
 
-- `2560x1440` for QHD.
-- `1920x1080` for FHD.
+Alerts adds `position=top|center|bottom`, `side=left|center|right`, per-tier durations/priorities, master/per-tier volumes, and avatar/platform toggles. Custom WAV/OGG files can be assigned by tier and event through `alerts/assets/sounds/manifest.json`; no asset path is accepted from the URL. See [Alerts](alerts/README.md).
 
-Keep background transparent, and leave `Shutdown source when not visible` and `Refresh browser when scene becomes active` disabled.
+## Deployment
 
-## 9. Customize Appearance
+The Pages workflow runs syntax checks, all tests, and preflight before building an allowlisted `dist/` artifact. It publishes only the chat runtime, shared runtime, the two new app runtimes, dictionaries, and required assets. Tests, fixtures, documentation, screenshots, development scripts, and secrets are excluded.
 
-Use fragment parameters for runtime changes:
+In GitHub Settings → Pages, select **GitHub Actions** as the source. No SSN secret is required. Public paths remain:
 
 ```text
-#session=SESSION_ID&side=right&max=6&duration=18000&eventDuration=26000&accent=%23ffffff&scale=1
+https://zagaslabs.github.io/stream_overlays/chat/
+https://zagaslabs.github.io/stream_overlays/wordlestream/
+https://zagaslabs.github.io/stream_overlays/alerts/
 ```
 
-Edit `src/styles.css` for deeper visual changes.
+The repository root redirects to `/chat/` while preserving URL-fragment configuration. The GitHub repository must be named `stream_overlays` for these exact public paths.
 
-## 10. Troubleshooting
+## Operations and troubleshooting
 
-- Connection: confirm the SSN Session ID is correct and SSN is actively receiving chat.
-- Missing messages: test first with `#mock=1&debug=1`, then confirm Social Stream Ninja sees the platform messages.
-- Empty events: transport/control packets and events without visible information are intentionally ignored.
-- Cache: clear OBS browser cache if old styling remains.
-- CORS/referrer: production uses the official SSN iframe bridge and `no-referrer`.
-- Private URL: never show the full Browser Source URL on stream.
+- OBS cache: refresh the Browser Source cache only when deploying an update. For a stuck old build, clear OBS Browser cache and restart OBS.
+- SSN connection: confirm the extension/app is enabled, the source chat is open, and WebSocket mode is enabled for full Twitch/Kick/YouTube events. Verify with SSN's dock before troubleshooting an overlay.
+- Word game state: keep source shutdown/scene refresh disabled. Clear site data or use an authorized reset to remove a saved round.
+- Audio: use OBS's Browser Source audio control and avoid also capturing the same audio through Desktop Audio.
+- Privacy: never display, paste into chat, commit, or screenshot a complete production URL; its fragment contains the Session ID.
 
-## Command Reference
+Detailed guides: [WordleStream OBS](docs/obs-wordlestream.md), [Alerts OBS/audio](docs/obs-alerts.md), [SSN integration](docs/ssn-integration.md), [capability matrix](docs/alerts-capability-matrix.md), and [security](docs/security.md).
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Serve the overlay at `127.0.0.1:8765`. |
-| `npm run mock` | Serve and print the mock/debug URL. |
-| `npm run test` | Run Node unit tests. |
-| `npm run check` | Run syntax checks and tests. |
-| `npm run preflight` | Check required files and secret-safety rules. |
-| `npm run url -- --session SESSION_ID` | Print local OBS URL. |
-| `npm run url -- --session SESSION_ID --production` | Print GitHub Pages OBS URL. |
+## Updating an overlay
+
+Keep each app's logic, styles, tests, and docs within its directory. Put only transport, sanitization, validated configuration primitives, platform identity, and neutral design tokens in `shared/`. Run `npm run check`, `npm run preflight`, and `npm run build:pages`; verify all three paths in `dist/` before opening a pull request.

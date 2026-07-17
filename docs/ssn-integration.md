@@ -1,72 +1,33 @@
-# Social Stream Ninja Integration Notes
+# Social Stream Ninja Integration
 
-Inspection date: 2026-07-15.
+Inspection date: **2026-07-16**. Upstream manifest version observed: **3.49.1**. A commit SHA could not be obtained from the restricted local network, so the date, public manifest version, and source paths are recorded instead.
 
-Official upstream material consulted:
+## Official references inspected
 
-- `baretempate.html` in `steveseguin/social_stream`: official custom overlay example using a hidden `vdo.socialstream.ninja` iframe and `window.postMessage`.
-- `api.md` in `steveseguin/social_stream`: API channels, message field notes, listener URL examples, and donation/message examples.
-- `https://socialstream.ninja/sampleapi.html`: official API sandbox/sample page.
-- `https://socialstream.ninja/tests/sse.html`: official SSE sample page for API testing reference.
+- [Live Event Reference](https://socialstream.ninja/docs/event-reference.html), the canonical platform/event reference.
+- [`steveseguin/social_stream`](https://github.com/steveseguin/social_stream), especially `api.md`, `baretemplate.html`/sample overlay guidance, `sources/youtube.js`, `sources/twitch.js`, `sources/kick.js`, `sources/streamplace.js`, and the matching `sources/websocket/*` adapters.
+- [Official API sample](https://socialstream.ninja/sampleapi.html) and official SSE sample for transport comparison.
 
-The local shell could not resolve GitHub from the sandbox, so the upstream files were inspected through browser-backed retrieval. No upstream commit SHA was available in the local workspace. Recheck the current upstream repository before changing transport behavior.
+## Transport
 
-## Transport Used
+All three overlays use the official hidden VDO.Ninja iframe bridge pattern. `shared/ssn/client.js` loads `https://vdo.socialstream.ninja/` with `view` and `room` set to the fragment Session ID, verifies both `event.origin` and the iframe `contentWindow`, and accepts only `dataReceived.overlayNinja` or `overlayNinja` envelopes. Generic VDO control traffic is ignored.
 
-Production uses the official browser iframe bridge pattern from `baretempate.html`.
+The Session ID comes only from `new URLSearchParams(window.location.hash.slice(1))` through the shared fragment parser. It is not logged or stored. Direct WSS/SSE APIs are not used because the existing iframe path is already proven in this repository and does not require enabling the separate API relay.
 
-At runtime, `src/ssn-client.js` creates a hidden iframe pointed at:
+## Confirmed common fields
 
-```text
-https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=false&push=false&vd=0&ad=0&autostart&cleanoutput&view=SESSION&room=SESSION
-```
+Official or adapter-confirmed fields used by the overlays are `id`, `timestamp`, `chatname`, `chatmessage`, `chatimg`, `chatbadges`, `type`, `sourceName`, `sourceImg`, `event`, `membership`, `subtitle`, `title`, `hasDonation`, `donoValue`, `currency`, `contentimg`, `userid`, `moderator`, `private`, and `meta`.
 
-The overlay listens for `message` events from `https://vdo.socialstream.ninja`, verifies the event came from the created iframe, and accepts only `dataReceived.overlayNinja` or `overlayNinja` payloads. Generic VDO.Ninja `content` messages are intentionally ignored because they can contain bridge control traffic rather than SSN chat.
+`meta` is platform-specific. Confirmed examples include YouTube `channelId`, Twitch `bits`, gift totals and raid viewers, Kick `amount`/`currency`/`supporter`, native `messageId`, and reply metadata. Display names are fallback identities only; WordleStream prefers `userid`, YouTube `meta.channelId`, or Streamplace identity metadata when present.
 
-The Social Stream Ninja Session ID is read only from the URL fragment:
+Fields such as broadcaster/owner flags are treated as verified only when delivered as booleans by the adapter. Badge labels or free text never grant admin rights. Amount strings remain display text; numeric thresholds use `donoValue` or documented numeric metadata where available.
 
-```text
-#session=SESSION_ID
-```
+## Event handling policy
 
-The fragment can also include non-secret display configuration:
+- Alerts keys off canonical `event` values and `hasDonation`, with documented deprecated aliases accepted for older SSN versions.
+- Unknown values are ignored with debug-only field names, never field values.
+- Streamplace chat is accepted by WordleStream, but Streamplace alert events are not synthesized.
+- Viewer/follower/subscriber count updates do not automatically become alerts; repeated polling would create noise. Only explicit milestone events are rendered.
+- Full Twitch, Kick, and YouTube alert coverage requires SSN WebSocket/bridge mode. DOM capture alone is limited.
 
-```text
-#session=SESSION_ID&side=right&accent=%23ffffff&max=6&duration=18000
-```
-
-Direct WebSocket listener URLs documented in `api.md`, including channel 4 paths such as `wss://io.socialstream.ninja/join/{session}/4`, are not the default because they require API relay behavior outside the simplest custom-overlay path.
-
-## Relevant Incoming Fields
-
-The normalizer expects these documented or observed SSN fields when present:
-
-- `chatname`: display name.
-- `chatmessage`: chat body, sometimes containing emote HTML.
-- `chatimg`: avatar URL.
-- `chatbadges`: badge data or badge image URLs.
-- `type`: source platform identifier.
-- `sourceName`: source platform label.
-- `sourceImg`: source platform icon URL.
-- `textonly`: text-only indicator.
-- `hasDonation`, `amount`, `currency`: donation or paid-event values.
-- `contentimg`: attached content image.
-- `membership`: member/subscriber context.
-- `title`, `subtitle`: event or paid-message context.
-- `moderator`: moderator role indicator.
-- `event`: event type such as subscription, raid, follow, or system.
-- `admin`, `bot`, `private`, `nameColor`, `userid`, `id`, `question`, `meta`: optional metadata used conservatively.
-
-## Assumptions And Fallbacks
-
-- A normal chat payload must contain visible sanitized text or at least one valid emote image. A name or avatar by itself is not sufficient.
-- Payloads marked `private` are never rendered by the public overlay.
-- Recognized structured events require an author, message, or event detail. Empty `event: true` signals are ignored.
-- Unknown event types with visible content degrade to a safe system message. Empty unknown events are ignored.
-- Boolean events are inferred from message text only when it contains a specific action phrase such as "started following" or "raided with". Ordinary words such as "like" or "heart" inside chat do not create reaction banners.
-- A `member` or `subscriber` role does not itself turn ordinary chat into a subscription event; an explicit event or descriptive membership action is required.
-- Unusable payloads are ignored with a debug-only list of field names. Diagnostics never include field values or the Session ID.
-- Badge and emote HTML is not trusted. Only HTTPS image URLs and narrow image attributes survive sanitization.
-- Platform icons and avatar URLs are optional. Missing avatars render a local generated fallback.
-- Featured-message classification is intentionally conservative because a reliable official field was not confirmed beyond optional `question` or `featured` style metadata.
-- The overlay does not store, log, screenshot, or commit the Session ID.
+The exact platform matrix and limitations are in `docs/alerts-capability-matrix.md`.

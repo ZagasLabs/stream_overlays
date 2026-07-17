@@ -6,7 +6,7 @@
 2. Use the printed URL:
 
 ```text
-http://127.0.0.1:8765/#mock=1&debug=1
+http://127.0.0.1:8765/chat/#mock=1&debug=1
 ```
 
 Mock mode cycles through normal chat, long messages, moderator messages, subscriptions, donations, and raids.
@@ -20,7 +20,7 @@ Mock mode cycles through normal chat, long messages, moderator messages, subscri
 3. Use the production GitHub Pages URL plus your private fragment:
 
 ```text
-https://OWNER.github.io/REPOSITORY/#session=SESSION_ID&side=right
+https://zagaslabs.github.io/stream_overlays/chat/#session=SESSION_ID&side=right
 ```
 
 4. Leave `Shutdown source when not visible` disabled.

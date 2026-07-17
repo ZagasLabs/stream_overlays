@@ -1,18 +1,31 @@
 {
-  "name": "p5chatoverlay",
+  "name": "stream-overlays",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Static OBS Browser Source chat overlay for Social Stream Ninja.",
+  "description": "Static OBS Browser Source overlays for Social Stream Ninja chat, cooperative words, and alerts.",
+  "homepage": "https://zagaslabs.github.io/stream_overlays/",
   "scripts": {
-    "dev": "node scripts/dev-server.mjs",
-    "mock": "node scripts/dev-server.mjs --mock",
-    "test": "node --test tests/*.test.mjs",
-    "check": "node --check src/app.js && node --check src/config.js && node --check src/ssn-client.js && node --check src/message-normalizer.js && node --check src/message-renderer.js && node --check src/layout-manager.js && node --check src/sanitizer.js && node --check scripts/dev-server.mjs && node --check scripts/print-url.mjs && node --check scripts/preflight.mjs && npm run test",
+    "dev": "node scripts/dev-server.mjs --app chat",
+    "dev:chat": "node scripts/dev-server.mjs --app chat",
+    "dev:wordle": "node scripts/dev-server.mjs --app wordlestream",
+    "dev:alerts": "node scripts/dev-server.mjs --app alerts",
+    "mock": "node scripts/dev-server.mjs --app chat --mock",
+    "mock:chat": "node scripts/dev-server.mjs --app chat --mock",
+    "mock:wordle": "node scripts/dev-server.mjs --app wordlestream --mock",
+    "mock:alerts": "node scripts/dev-server.mjs --app alerts --mock",
+    "test": "node --test tests/*.test.mjs wordlestream/tests/*.test.mjs alerts/tests/*.test.mjs",
+    "test:chat": "node --test tests/*.test.mjs",
+    "test:wordle": "node --test wordlestream/tests/*.test.mjs",
+    "test:alerts": "node --test alerts/tests/*.test.mjs",
+    "check": "node scripts/check.mjs && npm run test",
     "preflight": "node scripts/preflight.mjs",
-    "url": "node scripts/print-url.mjs"
+    "build:pages": "node scripts/build-pages.mjs",
+    "url": "node scripts/print-url.mjs --app chat",
+    "url:wordle": "node scripts/print-url.mjs --app wordlestream",
+    "url:alerts": "node scripts/print-url.mjs --app alerts"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   }
 }

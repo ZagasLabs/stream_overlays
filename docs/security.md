@@ -1,34 +1,16 @@
-# Security Notes
+# Security Model
 
-## Threat Model
+Incoming SSN names, messages, badges, event text, avatars, image URLs, metadata, and role claims are untrusted.
 
-The overlay runs in OBS Chromium/CEF and receives untrusted data from live chat sources through Social Stream Ninja. Attackers may control names, messages, emote markup, badge labels, avatar URLs, and event text.
+- Every page sets `<meta name="referrer" content="no-referrer">`.
+- The Session ID is read only from the URL fragment, validated to a narrow token format, passed only to the SSN bridge, and never logged or persisted.
+- Text is normalized, stripped of markup, length-bounded, and rendered with `textContent`/text nodes.
+- The sanitizer converts only verified `<img>` emotes into explicit nodes. Scripts, iframes, styles, arbitrary tags, inline handlers, unsafe protocols, malformed URLs, and non-local HTTP images are rejected.
+- Fragment values are enum/number/color/token validated and never used as HTML, CSS text, or file paths.
+- Wordle queues, cooldown maps, participants, attempts, alert queues, dedupe maps, DOM nodes, timers, and audio nodes are bounded and cleaned up.
+- Wordle localStorage contains only versioned game state under a session-independent key. Alerts and chat use no browser storage.
+- Admin access requires adapter boolean role metadata or an exact configured platform identity. Free-text roles and badges cannot grant control.
+- Unknown alert events and Streamplace production alert claims fail closed.
+- Preflight scans source/fixtures for SSN sessions, common token formats, credential-like fixture fields, unsafe HTML sinks, disallowed storage, and remote runtime dependencies.
 
-Main risks:
-
-- DOM injection from chat text or emote HTML.
-- Unsafe image URLs such as `javascript:` or non-local `http:`.
-- CSS injection through inline `style` attributes.
-- Script execution through event handlers, scripts, iframes, or malformed HTML.
-- Session ID exposure through committed files, console logs, OBS screenshots, or shared URLs.
-- Fake or malformed donation/event payloads.
-
-## Controls
-
-- Production configuration uses the URL fragment, not query parameters: `#session=SESSION_ID`.
-- The Session ID is not written to localStorage, sessionStorage, source files, fixtures, generated HTML, or CI logs.
-- `index.html` sets `<meta name="referrer" content="no-referrer">`.
-- Chat text is rendered with text nodes, not unsafe `innerHTML`.
-- Emote and badge image handling uses a narrow allowlist: `img`-like data is converted into explicit DOM nodes with validated URLs.
-- Inline event handlers, styles, scripts, iframes, unsafe protocols, and arbitrary HTML tags are stripped.
-- Avatar, platform, badge, and emote URLs must be HTTPS, except local development HTTP URLs for localhost.
-- Debug diagnostics are disabled by default and are written to the overlay UI only. Rejected payload diagnostics contain field names, never field values or Session IDs.
-- The iframe listener accepts only SSN `overlayNinja` envelopes and ignores generic VDO.Ninja content/control traffic.
-- Incoming payloads marked `private` are discarded before normalization and rendering.
-- Preflight scans for accidental Session IDs, browser storage usage, and remote runtime dependencies.
-
-## Operational Guidance
-
-Do not show the full OBS Browser Source URL on stream. Treat it like a private credential because the fragment contains the Session ID.
-
-If a malicious message appears in chat, the overlay should display only plain text and approved images. If the overlay behaves unexpectedly, remove the Browser Source, clear OBS browser cache, rotate the SSN Session ID, and rerun `npm run preflight`.
+Operationally, treat a complete OBS URL as a credential. If it is exposed, rotate the SSN Session ID, update Browser Sources, clear OBS Browser cache, and rerun `npm run preflight`.
