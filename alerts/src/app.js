@@ -3,7 +3,7 @@ import { SocialStreamClient } from "../../shared/ssn/client.js";
 import { AlertAudioEngine } from "./audio-engine.js";
 import { parseAlertsConfigFromLocation } from "./config.js";
 import { ALERT_FIXTURES, STREAMPLACE_MOCK_ALERT } from "./mock-fixtures.js";
-import { alertDuration, normalizeAlert } from "./normalizer.js";
+import { alertDuration, analyzeAlertPayload } from "./normalizer.js";
 import { AlertQueue } from "./queue.js";
 
 const config = parseAlertsConfigFromLocation(window.location);
@@ -15,6 +15,9 @@ const audio = new AlertAudioEngine(config);
 const timers = new Set();
 let active = null;
 let fixtureCounter = 0;
+let client = null;
+const debugCounters = { raw: 0, event: 0, chat: 0, ignored: 0 };
+const MAX_DEBUG_ENTRIES = 60;
 
 document.documentElement.dataset.position = config.position;
 document.documentElement.dataset.side = config.side;
@@ -23,28 +26,36 @@ document.documentElement.style.setProperty("--overlay-accent", config.accent);
 document.documentElement.style.setProperty("--alert-scale", String(config.scale));
 audio.prepare();
 await audio.whenReady();
+if (config.debug || config.mock) initializeDebugPanel();
 
 if (!config.valid) {
   showDiagnostic("Missing #session=SESSION_ID. Use #mock=1 for local testing.", true);
 } else if (config.mock) {
   startMockMode();
 } else {
-  const client = new SocialStreamClient({ session: config.session, debug: config.debug });
-  client.addEventListener("message", (event) => ingest(event.detail));
-  client.addEventListener("status", (event) => showDiagnostic(event.detail.message));
+  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "alerts", server: config.server });
+  client.addEventListener("payload", (event) => ingest(event.detail.payload, event.detail.transport));
+  client.addEventListener("raw", (event) => logRawPayload(event.detail));
+  client.addEventListener("diagnostic", (event) => logTransportDiagnostic(event.detail));
+  client.addEventListener("status", (event) => {
+    logDebugEntry({ kind: "status", transport: event.detail.transport, summary: event.detail.message });
+    showDiagnostic(event.detail.message);
+  });
   client.start();
 }
 
 window.addEventListener("pagehide", () => {
+  client?.stop();
   timers.forEach((timer) => window.clearTimeout(timer));
   timers.clear();
   audio.destroy();
 }, { once: true });
 
-function ingest(payload) {
-  const alert = normalizeAlert(payload, config);
-  if (!alert) return showDiagnostic(`Ignored unsupported/unknown event (${safeShape(payload)}).`);
-  enqueue(alert);
+function ingest(payload, transport = "local") {
+  const analysis = analyzeAlertPayload(payload, config);
+  logClassification(analysis, transport);
+  if (!analysis.alert) return showDiagnostic(`Ignored: ${analysis.reason} (${safeShape(payload)}).`);
+  enqueue(analysis.alert);
 }
 
 function enqueue(alert) {
@@ -205,10 +216,10 @@ function startMockMode() {
 }
 
 function buildDebugControls() {
-  debugPanel.hidden = false;
+  const controls = document.querySelector("#mock-controls") || debugPanel;
   const title = document.createElement("strong");
   title.textContent = "ALERTS LAB";
-  debugPanel.append(title);
+  controls.append(title);
   ALERT_FIXTURES.forEach((fixture, index) => addButton(`${index < 9 ? `${index + 1} · ` : ""}${fixture.fixtureName}`, () => injectFixture(fixture)));
   addButton("Streamplace mock only", () => enqueue({ ...STREAMPLACE_MOCK_ALERT, id: `${STREAMPLACE_MOCK_ALERT.id}-${fixtureCounter++}`, timestamp: Date.now() }));
   addButton("Burst + priority", demoBurst);
@@ -226,10 +237,7 @@ function buildDebugControls() {
   volume.setAttribute("aria-label", "Alert master volume");
   volume.addEventListener("input", () => { audio.setMasterVolume(volume.value); updateDebugStatus(); });
   volumeLabel.append(volume);
-  debugPanel.append(volumeLabel);
-  const status = document.createElement("span");
-  status.id = "debug-status";
-  debugPanel.append(status);
+  controls.append(volumeLabel);
   updateDebugStatus();
   window.addEventListener("keydown", (event) => {
     if (!event.altKey) return;
@@ -244,12 +252,12 @@ function addButton(label, handler) {
   button.textContent = label;
   button.setAttribute("aria-label", `Run alert fixture: ${label}`);
   button.addEventListener("click", handler);
-  debugPanel.append(button);
+  (document.querySelector("#mock-controls") || debugPanel).append(button);
 }
 
 function injectFixture(fixture, preserveId = false) {
   const payload = { ...fixture.payload, id: preserveId ? fixture.payload.id : `${fixture.payload.id}-${fixtureCounter++}`, timestamp: Date.now() };
-  ingest(payload);
+  ingest(payload, "mock");
 }
 
 function demoBurst() {
@@ -265,5 +273,124 @@ function demoDuplicate() {
 
 function updateDebugStatus() {
   const status = document.querySelector("#debug-status");
-  if (status) status.textContent = `active: ${active?.type || "none"} · queued: ${queue.length} · audio: ${audio.status} (${audio.packStatus}) · volume: ${audio.masterVolume.toFixed(2)}`;
+  if (status) status.textContent = `active: ${active?.type || "none"} · queued: ${queue.length} · audio: ${audio.status} (${audio.packStatus}) · volume: ${audio.masterVolume.toFixed(2)} · server: ${config.server ? "on" : "off"}`;
+  const counts = document.querySelector("#debug-counts");
+  if (counts) counts.textContent = `raw ${debugCounters.raw} · event ${debugCounters.event} · chat ${debugCounters.chat} · ignored ${debugCounters.ignored}`;
+}
+
+function initializeDebugPanel() {
+  debugPanel.hidden = false;
+  debugPanel.replaceChildren();
+  const title = document.createElement("strong");
+  title.textContent = "SSN DIAGNOSTICS";
+  const counts = document.createElement("span");
+  counts.id = "debug-counts";
+  counts.className = "debug-counts";
+  const status = document.createElement("span");
+  status.id = "debug-status";
+  const clear = document.createElement("button");
+  clear.type = "button";
+  clear.textContent = "Clear diagnostic log";
+  clear.setAttribute("aria-label", "Clear Social Stream Ninja diagnostic log");
+  clear.addEventListener("click", () => {
+    document.querySelector("#transport-log")?.replaceChildren();
+    for (const key of Object.keys(debugCounters)) debugCounters[key] = 0;
+    updateDebugStatus();
+  });
+  const log = document.createElement("div");
+  log.id = "transport-log";
+  log.className = "transport-log";
+  log.setAttribute("role", "log");
+  log.setAttribute("aria-label", "Raw Social Stream Ninja payload diagnostics");
+  log.setAttribute("aria-live", "off");
+  const controls = document.createElement("section");
+  controls.id = "mock-controls";
+  controls.className = "mock-controls";
+  debugPanel.append(title, counts, status, clear, log, controls);
+  updateDebugStatus();
+}
+
+function logRawPayload({ transport, envelope, timestamp }) {
+  debugCounters.raw += 1;
+  logDebugEntry({
+    kind: "raw",
+    transport,
+    timestamp,
+    summary: `RAW · ${safeShape(parseDebugEnvelope(envelope))}`,
+    detail: safeDebugJson(envelope)
+  });
+}
+
+function logTransportDiagnostic({ transport, reason, shape, timestamp }) {
+  debugCounters.ignored += 1;
+  logDebugEntry({ kind: "ignored", transport, timestamp, summary: `IGNORED · ${reason} · ${shape}` });
+}
+
+function logClassification(analysis, transport) {
+  debugCounters[analysis.kind] = (debugCounters[analysis.kind] || 0) + 1;
+  const source = analysis.platform || "unknown";
+  const event = analysis.event || "no-event";
+  const target = analysis.alert ? ` → ${analysis.alert.type}/${analysis.alert.tier}` : "";
+  logDebugEntry({
+    kind: analysis.kind,
+    transport,
+    summary: `${analysis.kind.toUpperCase()} · ${source}/${event}${target} · ${analysis.reason}`
+  });
+}
+
+function logDebugEntry({ kind, transport = "client", timestamp = Date.now(), summary, detail = "" }) {
+  if (!config.debug) return;
+  const log = document.querySelector("#transport-log");
+  if (!log) return;
+  const entry = document.createElement(detail ? "details" : "div");
+  entry.className = `debug-entry debug-entry--${kind}`;
+  const line = document.createElement(detail ? "summary" : "span");
+  line.textContent = `${formatDebugTime(timestamp)} · ${String(transport).toUpperCase()} · ${summary}`;
+  entry.append(line);
+  if (detail) {
+    const payload = document.createElement("pre");
+    payload.textContent = detail;
+    entry.append(payload);
+  }
+  log.prepend(entry);
+  while (log.childElementCount > MAX_DEBUG_ENTRIES) log.lastElementChild?.remove();
+  updateDebugStatus();
+}
+
+function safeDebugJson(value) {
+  const parsed = parseDebugEnvelope(value);
+  try { return JSON.stringify(redactDebugValue(parsed, 0), null, 2).slice(0, 4000); } catch { return "[unserializable payload]"; }
+}
+
+function parseDebugEnvelope(value) {
+  if (typeof value !== "string") return value;
+  if (value.length > 128 * 1024) return `[oversized string: ${value.length} chars]`;
+  try { return JSON.parse(value); } catch { return value.slice(0, 500); }
+}
+
+function redactDebugValue(value, depth) {
+  if (depth > 5) return "[depth limit]";
+  if (typeof value === "string") return redactPrivateText(value).slice(0, 500);
+  if (Array.isArray(value)) return value.slice(0, 12).map((entry) => redactDebugValue(entry, depth + 1));
+  if (!value || typeof value !== "object") return value;
+  const output = {};
+  for (const [key, entry] of Object.entries(value).slice(0, 30)) {
+    output[key] = isSensitiveDebugKey(key) ? "[redacted]" : redactDebugValue(entry, depth + 1);
+  }
+  return output;
+}
+
+function isSensitiveDebugKey(key) {
+  return /^(?:session|sessionid|ssnsession|streamid|room|roomid|join|apiid|password|secret|key|access_?token|refresh_?token|token)$/i.test(key);
+}
+
+function redactPrivateText(value) {
+  return String(value)
+    .replace(/([#?&](?:session|apiid|token|password|secret|key|access_?token|refresh_?token)=)[^&#\s]+/gi, "$1[redacted]")
+    .replace(/("(?:session|sessionid|ssnsession|streamid|room|roomid|join|apiid|token|password|secret|key|access_?token|refresh_?token)"\s*:\s*")[^"]+/gi, "$1[redacted]");
+}
+
+function formatDebugTime(timestamp) {
+  const date = new Date(Number(timestamp) || Date.now());
+  return [date.getHours(), date.getMinutes(), date.getSeconds()].map((part) => String(part).padStart(2, "0")).join(":");
 }

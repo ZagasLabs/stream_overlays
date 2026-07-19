@@ -8,6 +8,7 @@ const config = parseConfigFromLocation(window.location);
 const overlay = document.querySelector("#overlay");
 const column = document.querySelector("#chat-column");
 const debugPanel = document.querySelector("#debug-panel");
+let client = null;
 const layout = new LayoutManager({
   container: column,
   max: config.max,
@@ -28,11 +29,13 @@ if (!config.valid) {
 } else if (config.mock) {
   startMockMode();
 } else {
-  const client = new SocialStreamClient({ session: config.session, debug: config.debug });
+  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "chat" });
   client.addEventListener("message", (event) => ingest(event.detail));
   client.addEventListener("status", (event) => showDebug(event.detail.message));
   client.start();
 }
+
+window.addEventListener("pagehide", () => client?.stop(), { once: true });
 
 function ingest(raw) {
   const message = normalizeIncoming(raw);

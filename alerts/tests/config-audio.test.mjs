@@ -4,7 +4,7 @@ import { AlertAudioEngine, clampVolume, createSoundSamples } from "../src/audio-
 import { parseAlertsConfig } from "../src/config.js";
 
 test("clamps alert durations and volumes", () => {
-  const config = parseAlertsConfig({ hash: "#mock=1&position=bottom&side=left&minorDuration=1&standardDuration=99999&majorDuration=9000&volume=4&minorVolume=-1&sound=0&scale=9&reduceMotion=1" });
+  const config = parseAlertsConfig({ hash: "#mock=1&position=bottom&side=left&minorDuration=1&standardDuration=99999&majorDuration=9000&volume=4&minorVolume=-1&sound=0&scale=9&reduceMotion=1&server=1" });
   assert.equal(config.position, "bottom");
   assert.equal(config.side, "left");
   assert.equal(config.minorDuration, 3000);
@@ -12,7 +12,13 @@ test("clamps alert durations and volumes", () => {
   assert.equal(config.volume, .65);
   assert.equal(config.minorVolume, 0);
   assert.equal(config.sound, false);
+  assert.equal(config.server, true);
   assert.equal(config.scale, 1.5);
+});
+
+test("server transport is opt-in and ignores unsafe non-boolean values", () => {
+  assert.equal(parseAlertsConfig({ hash: "#mock=1" }).server, false);
+  assert.equal(parseAlertsConfig({ hash: "#mock=1&server=wss://attacker.invalid" }).server, false);
 });
 
 test("procedural sounds are finite, bounded, and tiered", () => {

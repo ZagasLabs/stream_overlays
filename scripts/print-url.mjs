@@ -17,7 +17,7 @@ if (!base) {
 }
 
 const params = {};
-for (const key of ["side", "position", "accent", "max", "duration", "eventDuration", "scale", "debug", "mock", "reduceMotion", "showPlatform", "showBadges", "showAvatar", "showParticipant", "lang", "command", "maxAttempts", "wordLength", "userCooldown", "globalCooldown", "admins", "accents", "sound", "volume", "minorDuration", "standardDuration", "majorDuration", "minorPriority", "standardPriority", "majorPriority", "minorVolume", "standardVolume", "majorVolume"]) {
+for (const key of ["side", "position", "accent", "max", "duration", "eventDuration", "scale", "debug", "mock", "reduceMotion", "showPlatform", "showBadges", "showAvatar", "showParticipant", "lang", "command", "maxAttempts", "wordLength", "userCooldown", "globalCooldown", "admins", "accents", "sound", "volume", "minorDuration", "standardDuration", "majorDuration", "minorPriority", "standardPriority", "majorPriority", "minorVolume", "standardVolume", "majorVolume", "server"]) {
   if (args[key] !== undefined) params[key] = args[key];
 }
 

@@ -59,7 +59,7 @@ Common settings include `session`, `accent`, `scale`, `debug`, `mock`, `reduceMo
 
 WordleStream adds `lang=en|es`, `command=!w,!word`, `maxAttempts=3..10`, `wordLength=4..8`, cooldowns in seconds, `admins=platform:identity`, `accents=fold|preserve`, and optional low-volume `sound`/`volume`. See [WordleStream](wordlestream/README.md).
 
-Alerts adds `position=top|center|bottom`, `side=left|center|right`, per-tier durations/priorities, master/per-tier volumes, and avatar/platform toggles. Custom WAV/OGG files can be assigned by tier and event through `alerts/assets/sounds/manifest.json`; no asset path is accepted from the URL. See [Alerts](alerts/README.md).
+Alerts adds `position=top|center|bottom`, `side=left|center|right`, per-tier durations/priorities, master/per-tier volumes, and avatar/platform toggles. Add `server=1` when the source must also receive SSN endpoint/webhook traffic from server channel 4; normal platform events continue to arrive over P2P. With `debug=1`, a bounded diagnostic panel shows raw envelopes, transport, classification, and rejection reasons while redacting session/token fields. Custom WAV/OGG files can be assigned by tier and event through `alerts/assets/sounds/manifest.json`; no asset path is accepted from the URL. See [Alerts](alerts/README.md).
 
 ## Deployment
 
@@ -78,7 +78,7 @@ The repository root redirects to `/chat/` while preserving URL-fragment configur
 ## Operations and troubleshooting
 
 - OBS cache: refresh the Browser Source cache only when deploying an update. For a stuck old build, clear OBS Browser cache and restart OBS.
-- SSN connection: confirm the extension/app is enabled, the source chat is open, and WebSocket mode is enabled for full Twitch/Kick/YouTube events. Verify with SSN's dock before troubleshooting an overlay.
+- SSN connection: confirm the extension/app is enabled, the source chat is open, and platform WebSocket mode is enabled for full Twitch/Kick/YouTube events. For endpoint tests, generate an Alerts URL with `--server 1 --debug 1` and send the fixture to channel 4. The platform WebSocket mode and the optional SSN server/API relay are separate settings.
 - Word game state: keep source shutdown/scene refresh disabled. Clear site data or use an authorized reset to remove a saved round.
 - Audio: use OBS's Browser Source audio control and avoid also capturing the same audio through Desktop Audio.
 - Privacy: never display, paste into chat, commit, or screenshot a complete production URL; its fragment contains the Session ID.

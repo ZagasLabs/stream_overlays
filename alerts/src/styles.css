@@ -302,13 +302,25 @@
   100% { opacity: .78; transform: translate3d(-10px, 1px, 0); filter: drop-shadow(20px -1px 0 var(--glitch-pink)); }
 }
 
-.debug-panel { position: fixed; top: 16px; left: 16px; z-index: 20; width: 232px; max-height: calc(100vh - 32px); overflow: auto; padding: 12px; color: var(--overlay-paper); background: rgba(4,5,8,.97); border: 1px solid var(--overlay-border); pointer-events: auto; }
+.debug-panel { position: fixed; top: 16px; left: 16px; z-index: 20; width: min(430px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 12px; color: var(--overlay-paper); background: rgba(4,5,8,.97); border: 1px solid var(--overlay-border); pointer-events: auto; }
 .debug-panel strong { display: block; margin-bottom: 8px; color: var(--overlay-accent); font-size: 11px; letter-spacing: .14em; }
 .debug-panel button { width: 100%; margin: 2px 0; padding: 6px 8px; color: inherit; background: #171a20; border: 1px solid #3f444f; text-align: left; cursor: pointer; }
 .debug-panel button:hover { border-color: var(--overlay-accent); }
+.debug-panel button:focus-visible, .debug-entry summary:focus-visible { outline: 2px solid var(--overlay-accent); outline-offset: 2px; }
 .debug-panel label { display: grid; gap: 4px; margin-top: 9px; color: var(--overlay-muted); font-size: 10px; }
 .debug-panel input { width: 100%; }
 #debug-status { display: block; margin-top: 9px; color: var(--overlay-muted); font-size: 9px; line-height: 1.35; }
+.debug-counts { display: block; margin-bottom: 7px; color: #d7dbe5; font: 700 10px/1.35 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.transport-log { display: grid; gap: 4px; max-height: min(42vh, 430px); margin: 10px 0; overflow: auto; overscroll-behavior: contain; }
+.debug-entry { padding: 6px 7px; color: #c8ccd5; background: #0d0f14; border-left: 2px solid #5c6370; font: 600 9px/1.42 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
+.debug-entry--raw { border-left-color: #28efff; }
+.debug-entry--event { border-left-color: #53fc18; }
+.debug-entry--chat { border-left-color: #a970ff; }
+.debug-entry--ignored { border-left-color: #ff3158; }
+.debug-entry--status { border-left-color: var(--overlay-accent); }
+.debug-entry summary { cursor: pointer; }
+.debug-entry pre { max-height: 220px; margin: 7px 0 0; overflow: auto; color: #aeb5c2; font: inherit; white-space: pre-wrap; }
+.mock-controls { display: grid; margin-top: 10px; padding-top: 10px; border-top: 1px solid #343944; }
 .diagnostic { position: fixed; right: 18px; bottom: 18px; max-width: 460px; padding: 8px 12px; color: var(--overlay-muted); background: rgba(5,6,9,.9); border-left: 2px solid var(--overlay-accent); font-size: 11px; }
 
 [data-reduce-motion="1"] .alert-card,

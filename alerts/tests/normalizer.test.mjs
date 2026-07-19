@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { alertDuration, chooseTier, normalizeAlert } from "../src/normalizer.js";
+import { alertDuration, analyzeAlertPayload, chooseTier, normalizeAlert } from "../src/normalizer.js";
 
 const config = { minorPriority: 10, standardPriority: 20, majorPriority: 30, minorDuration: 5000, standardDuration: 7000, majorDuration: 11000 };
 
@@ -42,4 +42,39 @@ test("selects tier, priority, and duration", () => {
   const alert = normalizeAlert({ type: "twitch", event: "raid", chatname: "R" }, config);
   assert.equal(alert.priority, 30);
   assert.equal(alertDuration(alert, config), 11000);
+});
+
+test("accepts current official aliases and API Sandbox eventType fields", () => {
+  assert.equal(normalizeAlert({ type: "twitch", eventType: "channel_followed", chatname: "A" }, config).type, "follow");
+  assert.equal(normalizeAlert({ type: "twitch", event: "gifted", chatname: "B" }, config).type, "gift");
+  assert.equal(normalizeAlert({ type: "twitch", event: "subscriber", chatname: "C" }, config).type, "subscription");
+  assert.equal(normalizeAlert({ type: "streamlabs", event: "sponsor", chatname: "D" }, config).type, "subscription");
+  assert.equal(normalizeAlert({ type: "twitch", event: "host", chatname: "E", meta: { viewers: 20 } }, config).type, "raid");
+  assert.equal(normalizeAlert({ type: "youtube", event: "thankyou", hasDonation: "$5", chatname: "F" }, config).type, "superchat");
+  assert.equal(normalizeAlert({ type: "kick", meta: { eventType: "channel.followed" }, chatname: "G" }, config).type, "follow");
+  assert.equal(normalizeAlert({ platform: "twitch", type: "channel.raid", chatname: "H", meta: { viewers: 12 } }, config).type, "raid");
+});
+
+test("derives an event only from safe documented signals", () => {
+  assert.equal(normalizeAlert({ type: "youtube", membership: "MEMBERSHIP", chatname: "A", chatmessage: "" }, config).type, "membership");
+  assert.equal(normalizeAlert({ type: "youtube", membership: "MEMBERSHIP", chatname: "A", chatmessage: "normal member chat" }, config), null);
+  assert.equal(normalizeAlert({ type: "kick", event: true, chatname: "B", chatmessage: "B followed" }, config).type, "follow");
+});
+
+test("returns deterministic debug classification and rejection reasons", () => {
+  const chat = analyzeAlertPayload({ type: "twitch", chatname: "A", chatmessage: "hello" }, config);
+  const count = analyzeAlertPayload({ type: "twitch", event: "viewer_update", meta: 42 }, config);
+  const unknown = analyzeAlertPayload({ type: "kick", event: "made_up", chatname: "B" }, config);
+  assert.deepEqual([chat.kind, chat.reason], ["chat", "regular-chat"]);
+  assert.deepEqual([count.kind, count.reason], ["ignored", "count-or-status-event"]);
+  assert.deepEqual([unknown.kind, unknown.reason], ["ignored", "unknown-event:made_up"]);
+});
+
+test("unwraps endpoint content commands and bounded batches", () => {
+  const wrapped = {
+    action: "content",
+    value: JSON.stringify({ type: "twitch", eventType: "new_follower", chatname: "Endpoint" })
+  };
+  assert.equal(normalizeAlert(wrapped, config).type, "follow");
+  assert.equal(normalizeAlert({ messages: [{ type: "kick", event: "new_subscriber", chatname: "Batch" }] }, config).type, "subscription");
 });

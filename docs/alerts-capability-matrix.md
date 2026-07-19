@@ -1,6 +1,6 @@
 # SSN Alerts Capability Matrix
 
-Verified against the official Social Stream Ninja Live Event Reference on **2026-07-16** (manifest 3.49.1 observed). “Bridge/WS” means the corresponding SSN WebSocket or API bridge mode is enabled; DOM-only coverage is explicitly noted.
+Verified against the official Social Stream Ninja Live Event Reference and alert-box source on **2026-07-17**, upstream revision `27eafa3`. “Bridge/WS” means the corresponding platform capture bridge is enabled; DOM-only coverage is explicitly noted. Alerts `server=1` is a separate optional receiver for SSN endpoint/channel-4 traffic.
 
 | Capability | Twitch | Kick | YouTube | Streamplace |
 | --- | --- | --- | --- | --- |
@@ -28,7 +28,7 @@ Verified against the official Social Stream Ninja Live Event Reference on **2026
 - Twitch `cheer`/bits → `bits`; YouTube `donation`/`supersticker` → `superchat`; other documented `donation` → `donation`
 - `membermilestone` → `milestone`; `reward`/`hype_train` → restrained `generic-event`
 
-Deprecated SSN aliases are accepted only for compatibility. Unknown events and periodic counters are ignored in production. Mock fixtures cover unsupported types for UI/queue testing but never claim production support; the Streamplace placeholder is explicitly labeled **MOCK ONLY**.
+The classifier also accepts current SSN compatibility forms such as `eventType`, documented metadata event fields, `subscriber`, `gifted`, `host`, `sponsor`, `tip`, and `support`; these aliases do not invent capabilities for a platform. Unknown events and periodic counters are ignored in production. Mock fixtures cover unsupported types for UI/queue testing but never claim production support; the Streamplace placeholder is explicitly labeled **MOCK ONLY**.
 
 ## Platform limitations
 

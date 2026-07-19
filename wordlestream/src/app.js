@@ -12,6 +12,7 @@ let latestAttemptCount = game.attempts.length;
 let audioContext = null;
 let instabilityTimer = null;
 let glitchTimer = null;
+let client = null;
 
 const board = document.querySelector("#board");
 const stateLabel = document.querySelector("#round-state");
@@ -33,7 +34,7 @@ if (!config.valid) {
 } else if (config.mock) {
   startMockMode();
 } else {
-  const client = new SocialStreamClient({ session: config.session, debug: config.debug });
+  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "wordle" });
   client.addEventListener("message", (event) => ingest(event.detail));
   client.addEventListener("status", (event) => showDiagnostic(event.detail.message));
   client.start();
@@ -48,6 +49,7 @@ const queueTimer = window.setInterval(() => {
   }
 }, 200);
 window.addEventListener("pagehide", () => {
+  client?.stop();
   window.clearInterval(queueTimer);
   window.clearTimeout(instabilityTimer);
   window.clearTimeout(glitchTimer);
