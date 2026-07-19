@@ -77,7 +77,7 @@ The repository root redirects to `/chat/` while preserving URL-fragment configur
 
 ## Operations and troubleshooting
 
-- OBS cache: refresh the Browser Source cache only when deploying an update. For a stuck old build, clear OBS Browser cache and restart OBS.
+- OBS cache: production builds stamp every local CSS/module reference with a content-derived cache key. GitHub Pages can still cache the HTML shell for about ten minutes; after a deployment, wait for that window or clear OBS Browser cache and restart OBS before judging the new build.
 - SSN connection: confirm the extension/app is enabled, the source chat is open, and platform WebSocket mode is enabled for full Twitch/Kick/YouTube events. P2P and channel 4 are automatic; `npm run test:ssn-live` performs an optional network check with a random disposable room. The platform WebSocket source mode and overlay transport are separate layers. In debug mode, **LOCAL · render follow** verifies this overlay without claiming that SSN emitted an event.
 - SSN test/follow caveat: the generic Test Message randomly includes `2500 gold` or YouTube Shorts `3 hearts`; those are donation-shaped fake chat payloads, not follow tests. YouTube `new_follower` requires its authenticated Data API/WebSocket source, the owner's own channel, a public subscriber, and can arrive much later.
 - Word game state: keep source shutdown/scene refresh disabled. Clear site data or use an authorized reset to remove a saved round.

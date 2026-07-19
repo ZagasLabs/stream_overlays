@@ -1,19 +1,21 @@
 import { stableHash } from "../hash.js";
 
 export const SSN_ORIGIN = "https://vdo.socialstream.ninja";
-export const SSN_SOCKET_URL = "wss://io.socialstream.ninja/extension";
+export const SSN_SOCKET_URL = "wss://io.socialstream.ninja";
 
 const MAX_FRAME_LENGTH = 128 * 1024;
 const MAX_PAYLOADS_PER_FRAME = 50;
 const MAX_UNWRAP_DEPTH = 6;
 const DEDUPE_WINDOW = 15_000;
 const MAX_DEDUPE_ENTRIES = 512;
+const MAX_BRIDGES = 3;
 
 export class SocialStreamClient extends EventTarget {
   constructor({
     session,
     debug = false,
     label = "dock",
+    labels,
     server = true,
     socketUrl = SSN_SOCKET_URL,
     webSocketFactory
@@ -21,11 +23,13 @@ export class SocialStreamClient extends EventTarget {
     super();
     this.session = session;
     this.debug = debug;
-    this.label = cleanLabel(label);
+    this.labels = cleanLabels(labels ?? [label]);
+    this.label = this.labels[0];
     this.server = server === true;
     this.socketUrl = socketUrl;
     this.webSocketFactory = webSocketFactory || ((url) => new WebSocket(url));
     this.iframe = null;
+    this.iframes = [];
     this.socket = null;
     this.reconnectTimer = null;
     this.reconnectAttempt = 0;
@@ -41,24 +45,30 @@ export class SocialStreamClient extends EventTarget {
     }
     if (this.running) return;
     this.running = true;
-    this.iframe = document.createElement("iframe");
-    this.iframe.title = "Social Stream Ninja bridge";
-    this.iframe.className = "ssn-bridge";
-    this.iframe.referrerPolicy = "no-referrer";
-    this.iframe.src = buildBridgeUrl(this.session, { label: this.label });
-    this.iframe.setAttribute("aria-hidden", "true");
-    this.iframe.addEventListener("load", () => this.emitStatus("P2P bridge loaded; waiting for payloads.", "p2p", "loaded"), { once: true });
-    this.iframe.addEventListener("error", () => this.emitStatus("P2P bridge failed to load.", "p2p", "error"), { once: true });
-    document.body.append(this.iframe);
+    for (const label of this.labels) {
+      const iframe = document.createElement("iframe");
+      iframe.title = `Social Stream Ninja ${label} bridge`;
+      iframe.className = "ssn-bridge";
+      iframe.dataset.ssnLabel = label;
+      iframe.referrerPolicy = "no-referrer";
+      iframe.src = buildBridgeUrl(this.session, { label });
+      iframe.setAttribute("aria-hidden", "true");
+      iframe.addEventListener("load", () => this.emitStatus(`${label} P2P bridge loaded; waiting for payloads.`, `p2p:${label}`, "loaded"), { once: true });
+      iframe.addEventListener("error", () => this.emitStatus(`${label} P2P bridge failed to load.`, `p2p:${label}`, "error"), { once: true });
+      this.iframes.push(iframe);
+      document.body.append(iframe);
+    }
+    this.iframe = this.iframes[0] || null;
     window.addEventListener("message", this.handleMessage);
-    this.emitStatus("Connecting to Social Stream Ninja P2P.", "p2p", "connecting");
+    this.emitStatus(`Connecting to Social Stream Ninja P2P (${this.labels.join(", ")}).`, "p2p", "connecting");
     if (this.server) this.startSocket();
   }
 
   stop() {
     this.running = false;
     window.removeEventListener("message", this.handleMessage);
-    this.iframe?.remove();
+    this.iframes.forEach((iframe) => iframe.remove());
+    this.iframes = [];
     this.iframe = null;
     if (this.reconnectTimer) {
       window.clearTimeout(this.reconnectTimer);
@@ -70,14 +80,16 @@ export class SocialStreamClient extends EventTarget {
 
   handleMessage(event) {
     if (event.origin !== SSN_ORIGIN) return;
-    if (this.iframe?.contentWindow && event.source !== this.iframe.contentWindow) return;
-    this.emitRaw("p2p", event.data);
+    const iframe = this.iframes.find((candidate) => candidate.contentWindow === event.source);
+    if (!iframe) return;
+    const transport = `p2p:${iframe.dataset.ssnLabel || "dock"}`;
+    this.emitRaw(transport, event.data);
     const payloads = extractBridgePayloads(event.data);
     if (!payloads.length) {
-      this.emitDiagnostic("p2p", "unsupported-envelope", event.data);
+      this.emitDiagnostic(transport, "unsupported-envelope", event.data);
       return;
     }
-    payloads.forEach((payload) => this.emitPayload("p2p", payload));
+    payloads.forEach((payload) => this.emitPayload(transport, payload));
   }
 
   startSocket() {
@@ -219,9 +231,9 @@ export function flattenPayloads(value) {
 export function buildBridgeUrl(session, { label = "dock" } = {}) {
   const url = new URL(`${SSN_ORIGIN}/`);
   for (const [key, value] of [
-    ["ln", ""], ["salt", "vdo.ninja"], ["password", "false"], ["push", ""],
-    ["label", cleanLabel(label)], ["view", session], ["vd", "0"], ["ad", "0"],
-    ["novideo", ""], ["noaudio", ""], ["autostart", ""], ["cleanoutput", ""],
+    ["ln", ""], ["salt", "vdo.ninja"], ["password", "false"],
+    ["view", session], ["label", cleanLabel(label)],
+    ["novideo", ""], ["noaudio", ""], ["cleanoutput", ""],
     ["room", session]
   ]) url.searchParams.set(key, value);
   return url.toString();
@@ -319,4 +331,9 @@ function stablePayloadText(value, depth = 0, ancestors = new Set()) {
 function cleanLabel(value) {
   const label = String(value || "dock").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32);
   return label || "dock";
+}
+
+function cleanLabels(values) {
+  const labels = [...new Set((Array.isArray(values) ? values : [values]).map(cleanLabel))].slice(0, MAX_BRIDGES);
+  return labels.length ? labels : ["dock"];
 }

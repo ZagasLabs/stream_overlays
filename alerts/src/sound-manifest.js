@@ -1,5 +1,5 @@
 export const SOUND_TIERS = Object.freeze(["minor", "standard", "major"]);
-export const SOUND_EVENTS = Object.freeze(["follow", "subscription", "resubscription", "membership", "gift", "raid", "donation", "bits", "superchat", "milestone", "generic-event"]);
+export const SOUND_EVENTS = Object.freeze(["follow", "subscription", "resubscription", "membership", "gift", "raid", "donation", "bits", "superchat", "hype-train", "milestone", "generic-event"]);
 export const MAX_CUSTOM_SOUND_BYTES = 4 * 1024 * 1024;
 
 export function parseSoundManifest(input) {

@@ -13,10 +13,12 @@ test("normalizes canonical platform events", () => {
 
 test("classifies paid events by platform without inventing unsupported events", () => {
   const bits = normalizeAlert({ type: "twitch", event: "cheer", chatname: "Bits", hasDonation: "500 bits", meta: { bits: 500 } }, config);
+  const twitchDonation = normalizeAlert({ type: "twitch", event: "donation", chatname: "Tip", hasDonation: "$10", donoValue: 10 }, config);
   const superchat = normalizeAlert({ type: "youtube", event: "donation", chatname: "YT", hasDonation: "$5" }, config);
   const kick = normalizeAlert({ type: "kick", event: "donation", chatname: "K", hasDonation: "$10" }, config);
   assert.equal(bits.type, "bits");
   assert.equal(bits.count, 500);
+  assert.equal(twitchDonation.type, "donation");
   assert.equal(superchat.type, "superchat");
   assert.equal(kick.type, "donation");
   assert.equal(normalizeAlert({ type: "streamplace", event: "new_follower", chatname: "Mock" }, config), null);
@@ -33,6 +35,23 @@ test("accepts SSN panel cheer variants and production hype train payloads", () =
   assert.equal(hype.user, "Channel");
   assert.equal(hype.metadata.level, 3);
   assert.match(hype.message, /1,680 \/ 2,000/);
+});
+
+test("accepts Bits and Hype Train transport variants emitted by SSN", () => {
+  const bitsOnly = normalizeAlert({ type: "twitch", event: true, chatname: "Ava", bits: 250, meta: { bits: 250 } }, config);
+  const eventSubHype = normalizeAlert({
+    type: "twitch",
+    meta: { eventSubType: "channel.hype_train.progress", id: "train-eventsub", phase: "progress", level: 2, progress: 360, goal: 500 }
+  }, config);
+  const targetedHype = normalizeAlert({
+    hype: { eventSubType: "channel.hype_train.begin", id: "train-targeted", phase: "begin", level: 1, progress: 120, goal: 500 }
+  }, config);
+  assert.equal(bitsOnly.type, "bits");
+  assert.equal(bitsOnly.amount, "250 bits");
+  assert.equal(bitsOnly.count, 250);
+  assert.equal(eventSubHype.type, "hype-train");
+  assert.equal(eventSubHype.metadata.level, 2);
+  assert.equal(targetedHype.type, "hype-train");
 });
 
 test("uses stable native IDs and safe bounded fields", () => {

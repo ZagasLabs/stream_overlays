@@ -2,7 +2,7 @@ import { parseConfigFromLocation } from "./config.js";
 import { LayoutManager } from "./layout-manager.js";
 import { normalizeIncoming, summarizePayloadShape } from "./message-normalizer.js";
 import { renderMessage } from "./message-renderer.js";
-import { SocialStreamClient } from "./ssn-client.js";
+import { ChatSocialStreamClient } from "./ssn-client.js";
 
 const config = parseConfigFromLocation(window.location);
 const overlay = document.querySelector("#overlay");
@@ -29,12 +29,8 @@ if (!config.valid) {
 } else if (config.mock) {
   startMockMode();
 } else {
-  // SSN broadcasts general chat traffic to the official dock label.
-  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "dock", server: config.server });
-  client.addEventListener("payload", (event) => ingest(event.detail.payload, event.detail.transport));
-  client.addEventListener("diagnostic", (event) => {
-    if (event.detail.reason !== "unsupported-envelope") showDebug(`${event.detail.transport.toUpperCase()}: ${event.detail.reason}.`);
-  });
+  client = new ChatSocialStreamClient({ session: config.session, debug: config.debug, server: config.server });
+  client.addEventListener("message", (event) => ingest(event.detail, "p2p"));
   client.addEventListener("status", (event) => showDebug(event.detail.message));
   client.start();
 }

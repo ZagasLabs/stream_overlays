@@ -21,7 +21,11 @@ const LEGACY_EVENTS = Object.freeze({
   followed: "new_follower", channel_followed: "new_follower", follower_added: "new_follower",
   channel_cheer: "cheer", channel_raid: "raid", super_chat: "donation", superchat: "donation",
   super_sticker: "supersticker", gift_send: "gift", gift_sent: "gift", gift_message: "gift",
-  live_gift: "gift", tiktok_gift: "gift", tip: "donation", support: "donation"
+  live_gift: "gift", tiktok_gift: "gift", tip: "donation", support: "donation",
+  hype: "hype_train", hypetrain: "hype_train", hype_train_begin: "hype_train",
+  hype_train_progress: "hype_train", hype_train_end: "hype_train",
+  channel_hype_train_begin: "hype_train", channel_hype_train_progress: "hype_train",
+  channel_hype_train_end: "hype_train"
 });
 
 export function normalizeAlert(raw, config = {}) {
@@ -29,7 +33,7 @@ export function normalizeAlert(raw, config = {}) {
 }
 
 export function analyzeAlertPayload(raw, config = {}) {
-  const payload = unwrap(raw);
+  const payload = normalizeSpecialEnvelope(unwrap(raw));
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
     return diagnosticResult("ignored", "malformed-payload");
   }
@@ -45,10 +49,14 @@ export function analyzeAlertPayload(raw, config = {}) {
 
   const metadata = safeMetadata(payload.meta);
   const timestamp = safeTimestamp(payload.timestamp ?? payload.time);
-  const amount = toSafeText(
+  let amount = toSafeText(
     payload.hasDonation || payload.amount || payload.donation || metadata.hasDonation || metadata.donation || metadata.amount || "",
     80
   );
+  if (!amount && classification.type === "bits") {
+    const bits = firstFiniteNumber(metadata.bits, payload.bits, payload.donoValue);
+    if (bits !== null && bits > 0) amount = `${Math.round(bits).toLocaleString("en-US")} bits`;
+  }
   const currency = inferCurrency(amount, toSafeText(payload.currency || metadata.currency || "", 12).toUpperCase());
   const count = extractCount(payload, metadata, classification.type, amount);
   const numericAmount = extractNumber(payload.donoValue ?? payload.donationValue ?? metadata.donoValue ?? metadata.donationValue ?? metadata.amount ?? amount);
@@ -84,8 +92,9 @@ export function classifyAlert({ payload, platform, event }) {
     payload.hasDonation || payload.amount || payload.donation || metadata.hasDonation || metadata.donation || "",
     80
   ).toLowerCase();
+  const bits = firstFiniteNumber(metadata.bits, payload.bits);
   if (platform === "streamplace" || COUNT_EVENTS.has(event)) return null;
-  if (["cheer", "bits"].includes(event) || (platform === "twitch" && /\bbits?\b/.test(donationText))) return { type: "bits" };
+  if (["cheer", "bits"].includes(event) || (platform === "twitch" && ((bits !== null && bits > 0) || /\bbits?\b/.test(donationText)))) return { type: "bits" };
   if (platform === "youtube" && ["donation", "supersticker", "thankyou"].includes(event)) return { type: "superchat" };
   if (["new_follower", "follow"].includes(event)) return { type: "follow" };
   if (event === "new_subscriber") return { type: "subscription" };
@@ -120,8 +129,8 @@ export function isKnownAlertType(value) { return TYPES.has(value); }
 function pickEvent(payload) {
   const metadata = safeMetadata(payload.meta);
   for (const candidate of [
-    payload.event, payload.eventType, payload.rawType, payload.alertType,
-    metadata.event, metadata.eventType, metadata.originalEventType, metadata.rawType, metadata.alertType, metadata.eventName
+    payload.event, payload.eventType, payload.eventSubType, payload.rawType, payload.alertType,
+    metadata.event, metadata.eventType, metadata.eventSubType, metadata.originalEventType, metadata.rawType, metadata.alertType, metadata.eventName
   ]) {
     const event = canonicalEvent(candidate);
     if (event) return event;
@@ -230,6 +239,21 @@ function hypeTrainMessage(metadata, type) {
 function boundedNumber(value, min, max) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : null;
+}
+
+function firstFiniteNumber(...values) {
+  const value = values.find((candidate) => Number.isFinite(Number(candidate)));
+  return value === undefined ? null : Number(value);
+}
+
+function normalizeSpecialEnvelope(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return payload;
+  const hype = payload.hype;
+  if (!hype || typeof hype !== "object" || Array.isArray(hype)) return payload;
+  const eventSubType = String(hype.eventSubType || "").toLowerCase();
+  const looksLikeTrain = Boolean(hype.phase || hype.level || hype.goal || eventSubType.includes("hype_train"));
+  if (!looksLikeTrain) return payload;
+  return { type: payload.type || "twitch", event: "hype_train", meta: hype };
 }
 
 function unwrap(raw) {

@@ -33,8 +33,8 @@ if (!config.valid) {
 } else if (config.mock) {
   startMockMode();
 } else {
-  // SSN targets event/donation payloads to its dedicated alerts label.
-  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "alerts", server: config.server });
+  // Current SSN targets alerts explicitly; dock also covers older capture paths.
+  client = new SocialStreamClient({ session: config.session, debug: config.debug, labels: ["alerts", "dock"], server: config.server });
   client.addEventListener("payload", (event) => ingest(event.detail.payload, event.detail.transport));
   client.addEventListener("raw", (event) => logRawPayload(event.detail));
   client.addEventListener("diagnostic", (event) => logTransportDiagnostic(event.detail));
@@ -184,7 +184,10 @@ function labelFor(alert) {
 function emphasisFor(alert) {
   if (alert.type === "hype-train" && alert.metadata.level) return `LEVEL ${alert.metadata.level}`;
   if (alert.amount) return alert.currency && !alert.amount.toUpperCase().includes(alert.currency) ? `${alert.amount} ${alert.currency}` : alert.amount;
-  if (alert.count) return `${alert.count.toLocaleString()} ${alert.type === "raid" ? "VIEWERS" : "GIFTS"}`;
+  if (alert.count) {
+    const unit = alert.type === "raid" ? "VIEWERS" : alert.type === "bits" ? "BITS" : "GIFTS";
+    return `${alert.count.toLocaleString()} ${unit}`;
+  }
   return "";
 }
 
@@ -267,6 +270,16 @@ function buildLiveDebugControls() {
   addButton("LOCAL · render follow", () => {
     const fixture = ALERT_FIXTURES[0];
     const payload = { ...fixture.payload, id: `local-follow-${fixtureCounter++}`, timestamp: Date.now() };
+    ingest(payload, "local-test");
+  });
+  addButton("LOCAL · render Bits", () => {
+    const fixture = ALERT_FIXTURES[8];
+    const payload = { ...fixture.payload, id: `local-bits-${fixtureCounter++}`, timestamp: Date.now() };
+    ingest(payload, "local-test");
+  });
+  addButton("LOCAL · render Hype Train", () => {
+    const fixture = ALERT_FIXTURES[9];
+    const payload = { ...fixture.payload, id: `local-hype-${fixtureCounter++}`, timestamp: Date.now() };
     ingest(payload, "local-test");
   });
 }

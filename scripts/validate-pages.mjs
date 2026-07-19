@@ -18,6 +18,9 @@ export function validatePages(output = resolve(process.cwd(), "dist")) {
       for (const reference of localReferences(content, extname(rel))) {
         const target = resolve(dirname(file), reference.split(/[?#]/)[0]);
         if (!existsSync(target)) failures.push(`${rel}: missing local reference ${reference}`);
+        if (/\.(?:js|mjs|css)(?:[?#]|$)/i.test(reference) && !/[?&]v=[a-f0-9]{12}(?:[&#]|$)/i.test(reference)) {
+          failures.push(`${rel}: unstamped cacheable reference ${reference}`);
+        }
       }
     }
   }
