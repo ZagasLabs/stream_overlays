@@ -9,7 +9,7 @@ export class SocialStreamClient extends EventTarget {
   constructor({
     session,
     debug = false,
-    label = "overlay",
+    label = "dock",
     server = false,
     socketUrl = SSN_SOCKET_URL,
     webSocketFactory
@@ -191,7 +191,7 @@ export function flattenPayloads(value) {
   return results;
 }
 
-export function buildBridgeUrl(session, { label = "overlay" } = {}) {
+export function buildBridgeUrl(session, { label = "dock" } = {}) {
   const url = new URL(`${SSN_ORIGIN}/`);
   for (const [key, value] of [
     ["ln", ""], ["salt", "vdo.ninja"], ["password", "false"], ["push", ""],
@@ -266,6 +266,6 @@ function payloadShape(value) {
 }
 
 function cleanLabel(value) {
-  const label = String(value || "overlay").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32);
-  return label || "overlay";
+  const label = String(value || "dock").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32);
+  return label || "dock";
 }

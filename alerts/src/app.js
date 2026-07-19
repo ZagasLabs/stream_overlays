@@ -33,6 +33,7 @@ if (!config.valid) {
 } else if (config.mock) {
   startMockMode();
 } else {
+  // SSN targets event/donation payloads to its dedicated alerts label.
   client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "alerts", server: config.server });
   client.addEventListener("payload", (event) => ingest(event.detail.payload, event.detail.transport));
   client.addEventListener("raw", (event) => logRawPayload(event.detail));
@@ -42,6 +43,14 @@ if (!config.valid) {
     showDiagnostic(event.detail.message);
   });
   client.start();
+  if (config.debug) {
+    buildLiveDebugControls();
+    schedule(() => {
+      if (debugCounters.raw === 0) {
+        showDiagnostic("No trusted SSN payload has arrived yet. Run LOCAL · render follow to verify the overlay separately from SSN capture and transport.");
+      }
+    }, 12_000);
+  }
 }
 
 window.addEventListener("pagehide", () => {
@@ -243,6 +252,21 @@ function buildDebugControls() {
     if (!event.altKey) return;
     const index = Number(event.key) - 1;
     if (ALERT_FIXTURES[index]) { event.preventDefault(); injectFixture(ALERT_FIXTURES[index]); }
+  });
+}
+
+function buildLiveDebugControls() {
+  const controls = document.querySelector("#mock-controls");
+  if (!controls) return;
+  const title = document.createElement("strong");
+  title.textContent = "LOCAL RENDER CHECK";
+  const note = document.createElement("span");
+  note.textContent = "This checks rendering only; it does not prove that SSN emitted or delivered an event.";
+  controls.append(title, note);
+  addButton("LOCAL · render follow", () => {
+    const fixture = ALERT_FIXTURES[0];
+    const payload = { ...fixture.payload, id: `local-follow-${fixtureCounter++}`, timestamp: Date.now() };
+    ingest(payload, "local-test");
   });
 }
 

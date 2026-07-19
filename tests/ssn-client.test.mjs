@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { SocialStreamClient, buildBridgeUrl, decodeSocketFrame, extractBridgePayload, extractBridgePayloads, flattenPayloads } from "../src/ssn-client.js";
 
 test("accepts official overlayNinja bridge envelopes", () => {
@@ -15,7 +16,7 @@ test("rejects generic VDO.Ninja content traffic", () => {
   assert.equal(extractBridgePayload({ action: "joined" }), null);
 });
 
-test("builds a unique-publisher bridge URL instead of the shared literal false ID", () => {
+test("builds a targeted alerts bridge with a unique publisher instead of the literal false ID", () => {
   const url = new URL(buildBridgeUrl("NON_SECRET_TEST", { label: "Alerts !!" }));
   assert.equal(url.searchParams.get("push"), "");
   assert.equal(url.searchParams.get("label"), "alerts");
@@ -23,6 +24,24 @@ test("builds a unique-publisher bridge URL instead of the shared literal false I
   assert.equal(url.searchParams.get("room"), "NON_SECRET_TEST");
   assert.equal(url.searchParams.has("novideo"), true);
   assert.equal(url.searchParams.has("noaudio"), true);
+});
+
+test("uses the official dock label for general chat and game traffic", () => {
+  const url = new URL(buildBridgeUrl("NON_SECRET_TEST"));
+  assert.equal(url.searchParams.get("label"), "dock");
+  assert.equal(new SocialStreamClient({ session: "NON_SECRET_TEST" }).label, "dock");
+  assert.equal(new SocialStreamClient({ session: "NON_SECRET_TEST", label: " !!! " }).label, "dock");
+});
+
+test("entrypoints retain SSN's routed dock and alerts labels", async () => {
+  const [chat, wordle, alerts] = await Promise.all([
+    readFile(new URL("../src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../wordlestream/src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../alerts/src/app.js", import.meta.url), "utf8")
+  ]);
+  assert.match(chat, /label:\s*"dock"/);
+  assert.match(wordle, /label:\s*"dock"/);
+  assert.match(alerts, /label:\s*"alerts"/);
 });
 
 test("flattens official batches, wrappers, and content endpoint envelopes", () => {

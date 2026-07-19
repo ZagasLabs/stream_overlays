@@ -29,7 +29,8 @@ if (!config.valid) {
 } else if (config.mock) {
   startMockMode();
 } else {
-  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "chat" });
+  // SSN broadcasts general chat traffic to the official dock label.
+  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "dock" });
   client.addEventListener("message", (event) => ingest(event.detail));
   client.addEventListener("status", (event) => showDebug(event.detail.message));
   client.start();

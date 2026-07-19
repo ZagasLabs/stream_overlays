@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { cleanSession, fragmentParams, parseColor } from "../shared/config.js";
-import { platformIdentity } from "../shared/platform.js";
+import { platformIdentity, platformPresentation } from "../shared/platform.js";
 import { scanSecrets } from "../shared/security/secret-scan.js";
 import { buildOverlayUrl } from "../shared/url-utils.js";
 
@@ -23,6 +23,14 @@ test("platform identity prefers stable IDs and separates platforms", () => {
   assert.equal(twitch.id, "twitch:42");
   assert.equal(youtube.id, "youtube:42");
   assert.notEqual(twitch.id, youtube.id);
+});
+
+test("YouTube Shorts keeps its source identity but uses a readable platform label", () => {
+  assert.deepEqual(platformPresentation("youtubeshorts"), {
+    type: "youtubeshorts",
+    label: "YouTube Shorts",
+    glyph: "YT"
+  });
 });
 
 test("secret scanning rejects credentials and allows documented placeholders", () => {

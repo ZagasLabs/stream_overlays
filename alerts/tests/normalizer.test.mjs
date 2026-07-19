@@ -61,6 +61,16 @@ test("derives an event only from safe documented signals", () => {
   assert.equal(normalizeAlert({ type: "kick", event: true, chatname: "B", chatmessage: "B followed" }, config).type, "follow");
 });
 
+test("explains SSN's randomized generic test-message donation branches", () => {
+  const gold = normalizeAlert({ type: "youtube", chatname: "Bob", hasDonation: "2500 gold" }, config);
+  const hearts = normalizeAlert({ type: "youtubeshorts", chatname: "Lucy", hasDonation: "3 hearts", chatmessage: "" }, config);
+  assert.equal(gold.type, "donation");
+  assert.equal(gold.tier, "major");
+  assert.equal(hearts.type, "donation");
+  assert.equal(hearts.platform, "youtubeshorts");
+  assert.equal(hearts.amount, "3 hearts");
+});
+
 test("returns deterministic debug classification and rejection reasons", () => {
   const chat = analyzeAlertPayload({ type: "twitch", chatname: "A", chatmessage: "hello" }, config);
   const count = analyzeAlertPayload({ type: "twitch", event: "viewer_update", meta: 42 }, config);

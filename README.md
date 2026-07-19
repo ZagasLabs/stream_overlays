@@ -78,7 +78,8 @@ The repository root redirects to `/chat/` while preserving URL-fragment configur
 ## Operations and troubleshooting
 
 - OBS cache: refresh the Browser Source cache only when deploying an update. For a stuck old build, clear OBS Browser cache and restart OBS.
-- SSN connection: confirm the extension/app is enabled, the source chat is open, and platform WebSocket mode is enabled for full Twitch/Kick/YouTube events. For endpoint tests, generate an Alerts URL with `--server 1 --debug 1` and send the fixture to channel 4. The platform WebSocket mode and the optional SSN server/API relay are separate settings.
+- SSN connection: confirm the extension/app is enabled, the source chat is open, and platform WebSocket mode is enabled for full Twitch/Kick/YouTube events. For endpoint tests, generate an Alerts URL with `--server 1 --debug 1` and send the fixture to channel 4. The platform WebSocket mode and the optional SSN server/API relay are separate settings. In debug mode, **LOCAL · render follow** verifies this overlay without claiming that SSN emitted an event.
+- SSN test/follow caveat: the generic Test Message randomly includes `2500 gold` or YouTube Shorts `3 hearts`; those are donation-shaped fake chat payloads, not follow tests. YouTube `new_follower` requires its authenticated Data API/WebSocket source, the owner's own channel, a public subscriber, and can arrive much later.
 - Word game state: keep source shutdown/scene refresh disabled. Clear site data or use an authorized reset to remove a saved round.
 - Audio: use OBS's Browser Source audio control and avoid also capturing the same audio through Desktop Audio.
 - Privacy: never display, paste into chat, commit, or screenshot a complete production URL; its fragment contains the Session ID.

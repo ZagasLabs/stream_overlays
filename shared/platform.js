@@ -1,9 +1,9 @@
 import { normalizeIdentityToken } from "./config.js";
 import { toSafeText } from "./security/sanitizer.js";
 
-const PLATFORM_ALIASES = Object.freeze({ yt: "youtube", youtube: "youtube", twitch: "twitch", kick: "kick", streamplace: "streamplace", "stream.place": "streamplace" });
-const PLATFORM_LABELS = Object.freeze({ youtube: "YouTube", twitch: "Twitch", kick: "Kick", streamplace: "Streamplace", unknown: "Chat" });
-const PLATFORM_GLYPHS = Object.freeze({ youtube: "YT", twitch: "TW", kick: "K", streamplace: "SP", unknown: "•" });
+const PLATFORM_ALIASES = Object.freeze({ yt: "youtube", youtube: "youtube", youtubeshorts: "youtubeshorts", twitch: "twitch", kick: "kick", streamplace: "streamplace", "stream.place": "streamplace" });
+const PLATFORM_LABELS = Object.freeze({ youtube: "YouTube", youtubeshorts: "YouTube Shorts", twitch: "Twitch", kick: "Kick", streamplace: "Streamplace", unknown: "Chat" });
+const PLATFORM_GLYPHS = Object.freeze({ youtube: "YT", youtubeshorts: "YT", twitch: "TW", kick: "K", streamplace: "SP", unknown: "•" });
 
 export function normalizePlatform(value) {
   const key = normalizeIdentityToken(value, 40).replace(/\s+/g, "");

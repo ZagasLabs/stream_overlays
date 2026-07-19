@@ -26,7 +26,8 @@
 
 .alert-card[data-platform="twitch"] { --platform-color: #a970ff; --platform-ink: #d9c5ff; }
 .alert-card[data-platform="kick"] { --platform-color: #53fc18; --platform-ink: #a9ff8a; }
-.alert-card[data-platform="youtube"] { --platform-color: #ff3158; --platform-ink: #ff9aad; }
+.alert-card[data-platform="youtube"],
+.alert-card[data-platform="youtubeshorts"] { --platform-color: #ff3158; --platform-ink: #ff9aad; }
 .alert-card[data-platform="streamplace"] { --platform-color: #ff8fc8; --platform-ink: #ffd0e8; }
 
 .alert-card {

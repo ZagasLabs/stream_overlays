@@ -8,7 +8,7 @@ Run `npm run mock:alerts` and open `http://127.0.0.1:8765/alerts/#mock=1&debug=1
 
 ## Live transport and endpoint tests
 
-Normal SSN platform traffic uses the hidden VDO.Ninja P2P bridge. Each overlay publishes with a generated unique ID and a stable label (`chat`, `wordle`, or `alerts`), so several Browser Sources can coexist in the same SSN room.
+Normal SSN platform traffic uses the hidden VDO.Ninja P2P bridge. Every Browser Source publishes with a generated unique ID, so several sources can coexist in the same SSN room. Labels are SSN routing addresses: Chat and WordleStream use `dock`, while this app uses the official `alerts` target. Arbitrary per-app labels do not receive general traffic.
 
 To also receive events sent through `io.socialstream.ninja` endpoints or raw channel 4, add `server=1`:
 
@@ -21,7 +21,7 @@ The server address is fixed in source to SSN's official WebSocket service; fragm
 
 In the official SSN API Sandbox, choose channel **4** and set **Event Type** to a documented value such as `new_follower`. The sandbox uses `eventType`; the overlay accepts it alongside canonical `event` and documented metadata aliases. `sendChat` is an outgoing chat command and does not create an alert.
 
-With `debug=1`, the diagnostic log records every trusted raw P2P/server envelope before classification, followed by `EVENT`, `CHAT`, or `IGNORED` and the rejection reason. It keeps at most 60 entries, uses text-only rendering, stores nothing, and redacts session, room, API ID, password, secret, key, and token fields. Remove `debug=1` after validation; the panel does not exist in normal production operation.
+With `debug=1`, the diagnostic log records every trusted raw P2P/server envelope before classification, followed by `EVENT`, `CHAT`, or `IGNORED` and the rejection reason. **LOCAL · render follow** verifies only this app's renderer and queue, making it easy to distinguish a visual bug from missing upstream traffic. The log keeps at most 60 entries, uses text-only rendering, stores nothing, and redacts session, room, API ID, password, secret, key, and token fields. Remove `debug=1` after validation; the panel does not exist in normal production operation.
 
 ## Audio
 

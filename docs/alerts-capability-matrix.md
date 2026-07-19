@@ -1,10 +1,10 @@
 # SSN Alerts Capability Matrix
 
-Verified against the official Social Stream Ninja Live Event Reference and alert-box source on **2026-07-17**, upstream revision `27eafa3`. “Bridge/WS” means the corresponding platform capture bridge is enabled; DOM-only coverage is explicitly noted. Alerts `server=1` is a separate optional receiver for SSN endpoint/channel-4 traffic.
+Verified against the official Social Stream Ninja Live Event Reference, background routing, platform adapters, and alert-box source on **2026-07-19**, upstream revision `27eafa3`. “Bridge/WS” means the corresponding platform capture bridge is enabled; DOM-only coverage is explicitly noted. Alerts `server=1` is a separate optional receiver for SSN endpoint/channel-4 traffic.
 
 | Capability | Twitch | Kick | YouTube | Streamplace |
 | --- | --- | --- | --- | --- |
-| Follow | Yes: `new_follower`, EventSub/WS | Yes: `new_follower`, bridge | Subscriber-as-follow: `new_follower`; delayed up to 4h, public subscriptions only | No |
+| Follow | Yes: `new_follower`, EventSub/WS | Yes: `new_follower`, bridge | Subscriber-as-follow: `new_follower`; Data API/WS only, owner channel only, 5-minute polling, public subscriptions only, delay up to 4h | No |
 | New sub/member | `new_subscriber`, WS | `new_subscriber`, bridge | `sponsorship`, DOM/WS when visible/authorized | No |
 | Resub/renewal | `resub`, WS | `resub`, bridge | `resub`, DOM/WS | No |
 | Gift sub/member | `subscription_gift`; limited gift lines in DOM | `subscription_gift`; basic `gift` line in DOM | `giftpurchase` / `giftredemption`, DOM/WS | No |
@@ -32,4 +32,4 @@ The classifier also accepts current SSN compatibility forms such as `eventType`,
 
 ## Platform limitations
 
-Twitch DOM capture does not provide follows, raids, or full subscription events; enable EventSub/WebSocket mode. Kick DOM capture has basic gift/reward/system lines and viewer counts; enable the Kick bridge for reliable alerts. YouTube membership/gift cards may only render for the channel owner or authorized moderators, and subscriber alerts are delayed and limited to public subscriptions. Streamplace currently provides chat and viewer count only.
+Twitch DOM capture does not provide follows, raids, or full subscription events; enable EventSub/WebSocket mode and authorize the required follower scope. Kick DOM capture has basic gift/reward/system lines and viewer counts; enable the Kick bridge for reliable alerts. YouTube Standard/DOM mode can expose memberships, gifts, Jewels, Super Chats, and redirects but cannot emit `new_follower`; that event requires the authenticated Data API/WebSocket source monitoring its own channel. YouTube membership/gift cards may only render for the channel owner or authorized moderators, and subscriber alerts are delayed and limited to subscriptions whose privacy setting is public. Streamplace currently provides chat and viewer count only.
