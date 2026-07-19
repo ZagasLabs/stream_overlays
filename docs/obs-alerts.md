@@ -6,10 +6,10 @@
 4. Enable **Control audio via OBS** for this Browser Source.
 5. Leave **Shutdown source when not visible** and **Refresh browser when scene becomes active** disabled so queued alerts and the audio context survive scene changes.
 
-For normal Twitch/Kick/YouTube events, the generated URL needs only `session`. If the overlay must receive SSN endpoint, webhook, API Sandbox, or direct channel-4 traffic, generate it with:
+The generated URL needs only `session`. P2P and SSN channel 4 are both enabled by default, so it continues working whether **Send chat messages to API server** is on or off. `server=0` exists only for deliberate P2P-only troubleshooting.
 
 ```sh
-npm run url:alerts -- --session SESSION_ID --production --server 1
+npm run url:alerts -- --session SESSION_ID --production
 ```
 
 For a temporary diagnostic source, add `--debug 1 --sound 0`. The panel distinguishes P2P from server payloads and reports `EVENT`, `CHAT`, or `IGNORED` with the exact reason. Remove those temporary options after testing.
@@ -30,8 +30,8 @@ Custom WAV/OGG files live in `alerts/assets/sounds/custom/` and are assigned in 
 
 If sound is silent, confirm `sound` is not `0`, Control audio via OBS is enabled, the source is not muted, the correct tracks are selected, and OBS has allowed the Browser Source to initialize audio. The debug panel reports `ready`, `suspended`, `fallback`, or `muted`. If styling/audio remains stale after deployment, clear OBS Browser cache, restart OBS, reload the source, then test before streaming.
 
-If alerts are silent visually, first use `debug=1`. Click **LOCAL · render follow**: if it appears, the renderer and queue are working, but this local fixture does not test SSN. `P2P · RAW` proves the bridge delivered data, `SERVER · RAW` proves channel 4 delivered data, and the following classification line explains any filter. For endpoint tests, select channel 4 in SSN's API Sandbox and provide a documented `eventType`; do not use `sendChat`.
+If alerts are silent visually, first use `debug=1`. Click **LOCAL · render follow**: if it appears, the renderer and queue are working, but this local fixture does not test SSN. `P2P · RAW` proves the bridge delivered data, `SERVER · RAW` proves channel 4 delivered data, and the following classification line explains any filter. Prefer SSN's built-in alert tests. For a direct endpoint test, select channel 4 in the Sandbox's Advanced Message Generator and provide a documented `eventType`; its separate main connection showing channel 1 is expected because channel 1 sends commands to the extension. Do not use `sendChat` as an incoming-alert test.
 
-SSN's generic **Test Message** is randomized. Its `2500 gold` and YouTube Shorts `3 hearts` variants carry `hasDonation`, so they appear as alerts; they are not follow tests. For live platform alerts, enable that platform's WebSocket/EventSub/bridge mode inside SSN—this is separate from `server=1` on the overlay. A YouTube follow test is especially unsuitable for immediate validation: Standard/DOM mode cannot emit it, the Data API source must be authenticated as the channel owner, the follower's subscriptions must be public, polling runs every five minutes, and YouTube may delay visibility by up to four hours.
+SSN's generic **Test Message** is randomized. Its `2500 gold` and YouTube Shorts `3 hearts` variants carry `hasDonation`, so they appear as alerts; they are not follow tests. For live platform alerts, enable that platform's WebSocket/EventSub/bridge mode inside SSN. A Twitch follow requires an active `channel.follow` EventSub subscription and the `moderator:read:followers` OAuth scope; re-authorize the Twitch WebSocket source if necessary and test with a fresh account. A YouTube follow test is unsuitable for immediate validation: Standard/DOM mode cannot emit it, the Data API source must be authenticated as the channel owner, the follower's subscriptions must be public, polling runs every five minutes, and YouTube may delay visibility by up to four hours.
 
 Never expose a complete production URL containing the Session ID.

@@ -1,6 +1,6 @@
 # SSN Alerts Capability Matrix
 
-Verified against the official Social Stream Ninja Live Event Reference, background routing, platform adapters, and alert-box source on **2026-07-19**, upstream revision `27eafa3`. “Bridge/WS” means the corresponding platform capture bridge is enabled; DOM-only coverage is explicitly noted. Alerts `server=1` is a separate optional receiver for SSN endpoint/channel-4 traffic.
+Verified against the official Social Stream Ninja Live Event Reference, background routing, platform adapters, and alert-box source on **2026-07-19**, upstream revision `27eafa3`. “Bridge/WS” means the corresponding platform capture bridge is enabled; DOM-only coverage is explicitly noted. The overlay receives P2P and SSN channel 4 by default.
 
 | Capability | Twitch | Kick | YouTube | Streamplace |
 | --- | --- | --- | --- | --- |
@@ -15,7 +15,7 @@ Verified against the official Social Stream Ninja Live Event Reference, backgrou
 | Native gifts/hearts | Bits/cheers; not “hearts” | KICKs/support gift events where bridge exposes them | `jeweldonation` for Jewels/Gifts | No confirmed event |
 | Member milestone | No canonical member milestone | No canonical member milestone | `membermilestone`, WS | No |
 | Viewer milestone | Counts only (`viewer_update`), not milestone events | Counts only | Viewer/sub/view totals, not viewer milestone alerts | `viewer_update` only |
-| Other meaningful events | Rewards, Hype Train, stream status; overlay maps reward/Hype Train to low generic events | Rewards and stream status; reward can be generic | `thankyou`, stream end, subscriber totals; unsupported values ignored | Chat, replies, badges, links, viewer count |
+| Other meaningful events | Rewards, Hype Train, stream status; Hype Train is a major alert and reward remains generic | Rewards and stream status; reward can be generic | `thankyou`, stream end, subscriber totals; unsupported values ignored | Chat, replies, badges, links, viewer count |
 
 ## Production classification
 
@@ -26,10 +26,10 @@ Verified against the official Social Stream Ninja Live Event Reference, backgrou
 - `subscription_gift`, `giftpurchase`, `giftredemption`, `jeweldonation` → `gift`
 - `raid` and YouTube `redirect` → `raid` tier, with redirect documented as an equivalent rather than a true raid
 - Twitch `cheer`/bits → `bits`; YouTube `donation`/`supersticker` → `superchat`; other documented `donation` → `donation`
-- `membermilestone` → `milestone`; `reward`/`hype_train` → restrained `generic-event`
+- `membermilestone` → `milestone`; `hype_train` → `hype-train` major tier; `reward` → restrained `generic-event`
 
 The classifier also accepts current SSN compatibility forms such as `eventType`, documented metadata event fields, `subscriber`, `gifted`, `host`, `sponsor`, `tip`, and `support`; these aliases do not invent capabilities for a platform. Unknown events and periodic counters are ignored in production. Mock fixtures cover unsupported types for UI/queue testing but never claim production support; the Streamplace placeholder is explicitly labeled **MOCK ONLY**.
 
 ## Platform limitations
 
-Twitch DOM capture does not provide follows, raids, or full subscription events; enable EventSub/WebSocket mode and authorize the required follower scope. Kick DOM capture has basic gift/reward/system lines and viewer counts; enable the Kick bridge for reliable alerts. YouTube Standard/DOM mode can expose memberships, gifts, Jewels, Super Chats, and redirects but cannot emit `new_follower`; that event requires the authenticated Data API/WebSocket source monitoring its own channel. YouTube membership/gift cards may only render for the channel owner or authorized moderators, and subscriber alerts are delayed and limited to subscriptions whose privacy setting is public. Streamplace currently provides chat and viewer count only.
+Twitch DOM capture does not provide follows, raids, or full subscription events; enable EventSub/WebSocket mode and re-authorize the Twitch source so its token includes `moderator:read:followers`. The EventSub user must be the broadcaster or a moderator, and a working source logs successful subscription to `channel.follow`. Kick DOM capture has basic gift/reward/system lines and viewer counts; enable the Kick bridge for reliable alerts. YouTube Standard/DOM mode can expose memberships, gifts, Jewels, Super Chats, and redirects but cannot emit `new_follower`; that event requires the authenticated Data API/WebSocket source monitoring its own channel. YouTube membership/gift cards may only render for the channel owner or authorized moderators, and subscriber alerts are delayed and limited to subscriptions whose privacy setting is public. Streamplace currently provides chat and viewer count only.

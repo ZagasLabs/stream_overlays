@@ -3,7 +3,7 @@ import { platformPresentation } from "../../shared/platform.js";
 import { toSafeText, validateMediaUrl } from "../../shared/security/sanitizer.js";
 import { flattenPayloads } from "../../shared/ssn/client.js";
 
-const TYPES = new Set(["follow", "subscription", "resubscription", "membership", "gift", "raid", "donation", "bits", "superchat", "milestone", "generic-event"]);
+const TYPES = new Set(["follow", "subscription", "resubscription", "membership", "gift", "raid", "donation", "bits", "superchat", "hype-train", "milestone", "generic-event"]);
 const KNOWN_SOURCES = new Set(["facebook", "instagram", "kick", "kofi", "rumble", "streamlabs", "streamplace", "tiktok", "twitch", "whatnot", "x", "youtube", "youtubeshorts"]);
 const COUNT_EVENTS = new Set(["viewer_update", "viewer_updates", "follower_update", "subscriber_update", "view_update", "stream_status", "stream_online", "stream_offline", "ad_break", "ad_break_begin", "ad_break_end"]);
 const GENERIC_EVENTS = new Set(["true", "event", "notification", "system"]);
@@ -55,18 +55,25 @@ export function analyzeAlertPayload(raw, config = {}) {
   const tier = chooseTier(classification.type, { count, numericAmount, currency });
   const priority = priorityForTier(tier, config);
   const user = toSafeText(
-    payload.chatname || payload.name || payload.username || payload.gifter || metadata.supporter || metadata.gifter || metadata.fromLogin || metadata.displayName || "Community",
+    payload.chatname || payload.name || payload.username || payload.gifter || metadata.supporter || metadata.gifter || metadata.fromLogin || metadata.displayName || metadata.broadcasterUserName || "Community",
     80
   );
-  const message = toSafeText(payload.chatmessage || payload.message || payload.subtitle || payload.title || metadata.message || "", 280);
+  const message = toSafeText(payload.chatmessage || payload.message || payload.subtitle || payload.title || metadata.message || hypeTrainMessage(metadata, classification.type), 280);
   const nativeId = toSafeText(payload.id || payload.mid || metadata.messageId || metadata.eventId || metadata.id || "", 160);
   const fingerprint = [platform.type, classification.type, user, amount, count || "", message, Math.floor(timestamp / 10_000)].join("|");
+  const alertMetadata = { sourceEvent: event || "derived-field", platformLabel: platform.label };
+  if (classification.type === "hype-train") {
+    alertMetadata.phase = toSafeText(metadata.phase || "", 24);
+    alertMetadata.level = boundedNumber(metadata.level, 0, 100);
+    alertMetadata.progress = boundedNumber(metadata.progress, 0, 1_000_000_000);
+    alertMetadata.goal = boundedNumber(metadata.goal, 0, 1_000_000_000);
+  }
   const alert = {
     id: nativeId || stableHash(fingerprint), timestamp, platform: platform.type, type: classification.type,
     priority, tier, user,
     avatar: validateMediaUrl(payload.chatimg || payload.avatar || metadata.avatar || metadata.avatarUrl || ""),
     amount, currency, count, message,
-    metadata: { sourceEvent: event || "derived-field", platformLabel: platform.label }
+    metadata: alertMetadata
   };
   return { kind: "event", reason: "accepted", payload, platform: platform.type, event, alert };
 }
@@ -78,7 +85,7 @@ export function classifyAlert({ payload, platform, event }) {
     80
   ).toLowerCase();
   if (platform === "streamplace" || COUNT_EVENTS.has(event)) return null;
-  if (platform === "twitch" && (["cheer", "bits"].includes(event) || /\bbits?\b/.test(donationText))) return { type: "bits" };
+  if (["cheer", "bits"].includes(event) || (platform === "twitch" && /\bbits?\b/.test(donationText))) return { type: "bits" };
   if (platform === "youtube" && ["donation", "supersticker", "thankyou"].includes(event)) return { type: "superchat" };
   if (["new_follower", "follow"].includes(event)) return { type: "follow" };
   if (event === "new_subscriber") return { type: "subscription" };
@@ -88,7 +95,8 @@ export function classifyAlert({ payload, platform, event }) {
   if (["raid", "host", "hosting", "redirect"].includes(event)) return { type: "raid" };
   if (event === "membermilestone") return { type: "milestone" };
   if (["donation", "thankyou"].includes(event) || (!event && donationText)) return { type: "donation" };
-  if (["reward", "hype_train"].includes(event)) return { type: "generic-event" };
+  if (event === "hype_train") return { type: "hype-train" };
+  if (event === "reward") return { type: "generic-event" };
   if (GENERIC_EVENTS.has(event)) return classifyGenericText(payload);
   if (!event && toSafeText(payload.membership, 100) && !toSafeText(payload.chatmessage, 280)) {
     return { type: platform === "youtube" ? "membership" : "subscription" };
@@ -98,7 +106,7 @@ export function classifyAlert({ payload, platform, event }) {
 
 export function chooseTier(type, { count = 0, numericAmount = 0, currency = "" } = {}) {
   const threshold = type === "bits" ? 1000 : majorAmountThreshold(currency);
-  if (type === "raid" || (type === "gift" && count >= 5) || (["donation", "superchat", "bits"].includes(type) && numericAmount >= threshold)) return "major";
+  if (["raid", "hype-train"].includes(type) || (type === "gift" && count >= 5) || (["donation", "superchat", "bits"].includes(type) && numericAmount >= threshold)) return "major";
   if (["subscription", "resubscription", "membership", "gift", "donation", "bits", "superchat"].includes(type)) return "standard";
   return "minor";
 }
@@ -209,6 +217,19 @@ function safeMetadata(value) {
 function safeTimestamp(value) {
   const timestamp = Number(value);
   return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : Date.now();
+}
+
+function hypeTrainMessage(metadata, type) {
+  if (type !== "hype-train") return "";
+  const progress = boundedNumber(metadata.progress, 0, 1_000_000_000);
+  const goal = boundedNumber(metadata.goal, 0, 1_000_000_000);
+  if (progress !== null && goal !== null && goal > 0) return `${progress.toLocaleString()} / ${goal.toLocaleString()} toward the next level`;
+  return "The community hype train is active";
+}
+
+function boundedNumber(value, min, max) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : null;
 }
 
 function unwrap(raw) {

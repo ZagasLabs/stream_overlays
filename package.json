@@ -18,6 +18,7 @@
     "test:chat": "node --test tests/*.test.mjs",
     "test:wordle": "node --test wordlestream/tests/*.test.mjs",
     "test:alerts": "node --test alerts/tests/*.test.mjs",
+    "test:ssn-live": "node scripts/test-ssn-relay.mjs",
     "check": "node scripts/check.mjs && npm run test",
     "preflight": "node scripts/preflight.mjs",
     "build:pages": "node scripts/build-pages.mjs",

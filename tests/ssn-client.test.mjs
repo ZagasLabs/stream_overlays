@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { SocialStreamClient, buildBridgeUrl, decodeSocketFrame, extractBridgePayload, extractBridgePayloads, flattenPayloads } from "../src/ssn-client.js";
+import { SocialStreamClient, buildBridgeUrl, decodeSocketFrame, extractBridgePayload, extractBridgePayloads, flattenPayloads, payloadFingerprint } from "../src/ssn-client.js";
 
 test("accepts official overlayNinja bridge envelopes", () => {
   const nested = { dataReceived: { overlayNinja: { chatname: "A", chatmessage: "Hello" } } };
@@ -30,7 +30,23 @@ test("uses the official dock label for general chat and game traffic", () => {
   const url = new URL(buildBridgeUrl("NON_SECRET_TEST"));
   assert.equal(url.searchParams.get("label"), "dock");
   assert.equal(new SocialStreamClient({ session: "NON_SECRET_TEST" }).label, "dock");
+  assert.equal(new SocialStreamClient({ session: "NON_SECRET_TEST" }).server, true);
   assert.equal(new SocialStreamClient({ session: "NON_SECRET_TEST", label: " !!! " }).label, "dock");
+});
+
+test("deduplicates the same payload arriving over P2P and channel 4", () => {
+  const client = new SocialStreamClient({ session: "NON_SECRET_TEST", debug: true });
+  const payload = { id: "message-1", type: "twitch", chatname: "Viewer", chatmessage: "Hello" };
+  const received = [];
+  const diagnostics = [];
+  client.addEventListener("payload", (event) => received.push(event.detail));
+  client.addEventListener("diagnostic", (event) => diagnostics.push(event.detail));
+
+  assert.equal(client.emitPayload("p2p", payload), true);
+  assert.equal(client.emitPayload("server", { ...payload }), false);
+  assert.equal(received.length, 1);
+  assert.equal(diagnostics[0].reason, "cross-transport-duplicate");
+  assert.equal(payloadFingerprint({ b: 2, a: 1 }), payloadFingerprint({ a: 1, b: 2 }));
 });
 
 test("entrypoints retain SSN's routed dock and alerts labels", async () => {

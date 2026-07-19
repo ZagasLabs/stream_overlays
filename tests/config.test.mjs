@@ -17,9 +17,15 @@ test("parses production fragment config", () => {
   assert.equal(config.accent, "#ff003c");
   assert.equal(config.scale, 1.2);
   assert.equal(config.debug, true);
+  assert.equal(config.server, true);
   assert.equal(config.reduceMotion, true);
   assert.equal(config.showAvatar, false);
   assert.equal(config.valid, true);
+});
+
+test("channel 4 fallback is enabled by default and can be disabled explicitly", () => {
+  assert.equal(parseConfig({ hash: "#session=abc" }).server, true);
+  assert.equal(parseConfig({ hash: "#session=abc&server=0" }).server, false);
 });
 
 test("invalid values fall back or clamp safely", () => {

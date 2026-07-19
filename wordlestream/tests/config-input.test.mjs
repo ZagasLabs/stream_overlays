@@ -13,6 +13,11 @@ test("validates and clamps Wordle fragment settings", () => {
   assert.deepEqual(config.admins, ["twitch:owner"]);
   assert.equal(config.volume, .5);
   assert.equal(config.scale, .7);
+  assert.equal(config.server, true);
+});
+
+test("Wordle channel 4 fallback can be disabled explicitly", () => {
+  assert.equal(parseWordleConfig({ hash: "#mock=1&server=0" }).server, false);
 });
 
 test("admin list rejects malformed entries", () => {

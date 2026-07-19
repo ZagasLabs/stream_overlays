@@ -8,6 +8,7 @@ export const ALERT_FIXTURES = Object.freeze([
   fixture("Raid", { id: "tw-raid", type: "twitch", event: "raid", chatname: "RaidLeader", meta: { viewers: 148 }, chatmessage: "Arrived with the whole crew" }),
   fixture("Donation", { id: "tip", type: "kofi", event: "donation", chatname: "Anonymous", hasDonation: "$25.00", currency: "USD", donoValue: 25, chatmessage: "For the next adventure!" }),
   fixture("Bits", { id: "bits", type: "twitch", event: "cheer", chatname: "BitRunner", hasDonation: "500 bits", donoValue: 500, meta: { bits: 500 } }),
+  fixture("Hype Train", { id: "hype-train", type: "twitch", event: "hype_train", meta: { phase: "progress", broadcasterUserName: "Signal Crew", level: 3, progress: 1680, goal: 2000 } }),
   fixture("Super Chat", { id: "superchat", type: "youtube", event: "donation", chatname: "Sol y Mar", hasDonation: "MX$100.00", currency: "MXN", donoValue: 100, chatmessage: "Saludos desde México ✨" }),
   fixture("Missing avatar", { id: "no-avatar", type: "twitch", event: "new_follower", chatname: "NoAvatarNeeded" }),
   fixture("Long content", { id: "long", type: "youtube", event: "sponsorship", chatname: "A_very_long_channel_name_that_needs_a_clean_ellipsis_without_breaking_the_alert", chatmessage: "This is a deliberately long friendly message with Unicode ✨🎙️ and enough words to verify that the panel stays compact instead of taking over the entire gameplay scene." })

@@ -59,7 +59,7 @@ Common settings include `session`, `accent`, `scale`, `debug`, `mock`, `reduceMo
 
 WordleStream adds `lang=en|es`, `command=!w,!word`, `maxAttempts=3..10`, `wordLength=4..8`, cooldowns in seconds, `admins=platform:identity`, `accents=fold|preserve`, and optional low-volume `sound`/`volume`. See [WordleStream](wordlestream/README.md).
 
-Alerts adds `position=top|center|bottom`, `side=left|center|right`, per-tier durations/priorities, master/per-tier volumes, and avatar/platform toggles. Add `server=1` when the source must also receive SSN endpoint/webhook traffic from server channel 4; normal platform events continue to arrive over P2P. With `debug=1`, a bounded diagnostic panel shows raw envelopes, transport, classification, and rejection reasons while redacting session/token fields. Custom WAV/OGG files can be assigned by tier and event through `alerts/assets/sounds/manifest.json`; no asset path is accepted from the URL. See [Alerts](alerts/README.md).
+Alerts adds `position=top|center|bottom`, `side=left|center|right`, per-tier durations/priorities, master/per-tier volumes, and avatar/platform toggles. Every live app receives P2P and server channel 4 by default, so SSN's **Send chat messages to API server** switch may remain on or off; `server=0` is the explicit P2P-only override. With `debug=1`, a bounded diagnostic panel shows raw envelopes, transport, classification, and rejection reasons while redacting session/token fields. Custom WAV/OGG files can be assigned by tier and event through `alerts/assets/sounds/manifest.json`; no asset path is accepted from the URL. See [Alerts](alerts/README.md).
 
 ## Deployment
 
@@ -78,7 +78,7 @@ The repository root redirects to `/chat/` while preserving URL-fragment configur
 ## Operations and troubleshooting
 
 - OBS cache: refresh the Browser Source cache only when deploying an update. For a stuck old build, clear OBS Browser cache and restart OBS.
-- SSN connection: confirm the extension/app is enabled, the source chat is open, and platform WebSocket mode is enabled for full Twitch/Kick/YouTube events. For endpoint tests, generate an Alerts URL with `--server 1 --debug 1` and send the fixture to channel 4. The platform WebSocket mode and the optional SSN server/API relay are separate settings. In debug mode, **LOCAL · render follow** verifies this overlay without claiming that SSN emitted an event.
+- SSN connection: confirm the extension/app is enabled, the source chat is open, and platform WebSocket mode is enabled for full Twitch/Kick/YouTube events. P2P and channel 4 are automatic; `npm run test:ssn-live` performs an optional network check with a random disposable room. The platform WebSocket source mode and overlay transport are separate layers. In debug mode, **LOCAL · render follow** verifies this overlay without claiming that SSN emitted an event.
 - SSN test/follow caveat: the generic Test Message randomly includes `2500 gold` or YouTube Shorts `3 hearts`; those are donation-shaped fake chat payloads, not follow tests. YouTube `new_follower` requires its authenticated Data API/WebSocket source, the owner's own channel, a public subscriber, and can arrive much later.
 - Word game state: keep source shutdown/scene refresh disabled. Clear site data or use an authorized reset to remove a saved round.
 - Audio: use OBS's Browser Source audio control and avoid also capturing the same audio through Desktop Audio.

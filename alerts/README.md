@@ -10,16 +10,16 @@ Run `npm run mock:alerts` and open `http://127.0.0.1:8765/alerts/#mock=1&debug=1
 
 Normal SSN platform traffic uses the hidden VDO.Ninja P2P bridge. Every Browser Source publishes with a generated unique ID, so several sources can coexist in the same SSN room. Labels are SSN routing addresses: Chat and WordleStream use `dock`, while this app uses the official `alerts` target. Arbitrary per-app labels do not receive general traffic.
 
-To also receive events sent through `io.socialstream.ninja` endpoints or raw channel 4, add `server=1`:
+The channel-4 receiver is also enabled by default because SSN's **Send chat messages to API server** switch moves general traffic away from P2P. No extra production parameter is needed:
 
 ```sh
-npm run url:alerts -- --session SESSION_ID --server 1 --debug 1 --sound 0
-npm run url:alerts -- --session SESSION_ID --production --server 1 --debug 1 --sound 0
+npm run url:alerts -- --session SESSION_ID --debug 1 --sound 0
+npm run url:alerts -- --session SESSION_ID --production --debug 1 --sound 0
 ```
 
-The server address is fixed in source to SSN's official WebSocket service; fragment values cannot select another host. The client subscribes with inbound channel 4, reconnects with bounded backoff, understands `content` action envelopes and official payload batches, and relies on the alert queue to suppress duplicates seen over both transports.
+The server address is fixed in source to SSN's official WebSocket service; fragment values cannot select another host. The client subscribes with inbound channel 4, reconnects with bounded backoff, understands `content` action envelopes and official payload batches, and suppresses duplicates seen over both transports. `server=0` explicitly disables this fallback for P2P-only troubleshooting.
 
-In the official SSN API Sandbox, choose channel **4** and set **Event Type** to a documented value such as `new_follower`. The sandbox uses `eventType`; the overlay accepts it alongside canonical `event` and documented metadata aliases. `sendChat` is an outgoing chat command and does not create an alert.
+Prefer the alert-test buttons in the official SSN application. In the API Sandbox's **Advanced Message Generator**, channel **4** can directly test listeners with an Event Type such as `new_follower`. The Sandbox's main connection defaults to channel 1 because that direction sends commands to the extension; this is expected. The form uses `eventType`, which the overlay accepts alongside canonical `event` and documented metadata aliases. `sendChat` is an outgoing chat command and does not create an alert.
 
 With `debug=1`, the diagnostic log records every trusted raw P2P/server envelope before classification, followed by `EVENT`, `CHAT`, or `IGNORED` and the rejection reason. **LOCAL · render follow** verifies only this app's renderer and queue, making it easy to distinguish a visual bug from missing upstream traffic. The log keeps at most 60 entries, uses text-only rendering, stores nothing, and redacts session, room, API ID, password, secret, key, and token fields. Remove `debug=1` after validation; the panel does not exist in normal production operation.
 

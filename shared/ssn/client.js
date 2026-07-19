@@ -1,16 +1,20 @@
+import { stableHash } from "../hash.js";
+
 export const SSN_ORIGIN = "https://vdo.socialstream.ninja";
 export const SSN_SOCKET_URL = "wss://io.socialstream.ninja/extension";
 
 const MAX_FRAME_LENGTH = 128 * 1024;
 const MAX_PAYLOADS_PER_FRAME = 50;
 const MAX_UNWRAP_DEPTH = 6;
+const DEDUPE_WINDOW = 15_000;
+const MAX_DEDUPE_ENTRIES = 512;
 
 export class SocialStreamClient extends EventTarget {
   constructor({
     session,
     debug = false,
     label = "dock",
-    server = false,
+    server = true,
     socketUrl = SSN_SOCKET_URL,
     webSocketFactory
   } = {}) {
@@ -26,6 +30,7 @@ export class SocialStreamClient extends EventTarget {
     this.reconnectTimer = null;
     this.reconnectAttempt = 0;
     this.running = false;
+    this.recentPayloads = new Map();
     this.handleMessage = this.handleMessage.bind(this);
   }
 
@@ -60,6 +65,7 @@ export class SocialStreamClient extends EventTarget {
       this.reconnectTimer = null;
     }
     this.closeSocket();
+    this.recentPayloads.clear();
   }
 
   handleMessage(event) {
@@ -146,8 +152,27 @@ export class SocialStreamClient extends EventTarget {
   }
 
   emitPayload(transport, payload) {
+    if (this.isCrossTransportDuplicate(transport, payload)) {
+      this.emitDiagnostic(transport, "cross-transport-duplicate", payload);
+      return false;
+    }
     this.dispatchEvent(new CustomEvent("payload", { detail: { transport, payload } }));
     this.dispatchEvent(new CustomEvent("message", { detail: payload }));
+    return true;
+  }
+
+  isCrossTransportDuplicate(transport, payload, now = Date.now()) {
+    for (const [key, entry] of this.recentPayloads) {
+      if (now - entry.timestamp > DEDUPE_WINDOW) this.recentPayloads.delete(key);
+    }
+    const key = payloadFingerprint(payload);
+    const previous = this.recentPayloads.get(key);
+    if (previous && previous.transport !== transport && now - previous.timestamp <= DEDUPE_WINDOW) return true;
+    this.recentPayloads.set(key, { transport, timestamp: now });
+    while (this.recentPayloads.size > MAX_DEDUPE_ENTRIES) {
+      this.recentPayloads.delete(this.recentPayloads.keys().next().value);
+    }
+    return false;
   }
 
   emitDiagnostic(transport, reason, envelope) {
@@ -200,6 +225,10 @@ export function buildBridgeUrl(session, { label = "dock" } = {}) {
     ["room", session]
   ]) url.searchParams.set(key, value);
   return url.toString();
+}
+
+export function payloadFingerprint(value) {
+  return stableHash(stablePayloadText(value));
 }
 
 function visit(value, depth, results) {
@@ -263,6 +292,28 @@ function payloadShape(value) {
   if (Array.isArray(value)) return `array(${Math.min(value.length, MAX_PAYLOADS_PER_FRAME)})`;
   if (!value || typeof value !== "object") return typeof value;
   return Object.keys(value).filter((key) => /^[a-zA-Z][\w]{0,39}$/.test(key)).sort().slice(0, 12).join(",") || "empty-object";
+}
+
+function stablePayloadText(value, depth = 0, ancestors = new Set()) {
+  if (depth > MAX_UNWRAP_DEPTH) return '"[depth]"';
+  if (value === null) return "null";
+  if (["string", "number", "boolean"].includes(typeof value)) {
+    return JSON.stringify(typeof value === "string" ? value.slice(0, MAX_FRAME_LENGTH) : value);
+  }
+  if (typeof value !== "object") return JSON.stringify(`[${typeof value}]`);
+  if (ancestors.has(value)) return '"[circular]"';
+  ancestors.add(value);
+  let result;
+  if (Array.isArray(value)) {
+    result = `[${value.slice(0, MAX_PAYLOADS_PER_FRAME).map((entry) => stablePayloadText(entry, depth + 1, ancestors)).join(",")}]`;
+  } else {
+    const entries = Object.keys(value).sort().slice(0, 80).map((key) =>
+      `${JSON.stringify(key)}:${stablePayloadText(value[key], depth + 1, ancestors)}`
+    );
+    result = `{${entries.join(",")}}`;
+  }
+  ancestors.delete(value);
+  return result;
 }
 
 function cleanLabel(value) {

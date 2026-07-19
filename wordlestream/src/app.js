@@ -35,7 +35,7 @@ if (!config.valid) {
   startMockMode();
 } else {
   // Guesses are ordinary chat payloads, which SSN routes to the dock label.
-  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "dock" });
+  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "dock", server: config.server });
   client.addEventListener("message", (event) => ingest(event.detail));
   client.addEventListener("status", (event) => showDiagnostic(event.detail.message));
   client.start();

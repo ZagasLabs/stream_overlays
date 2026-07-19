@@ -23,6 +23,18 @@ test("classifies paid events by platform without inventing unsupported events", 
   assert.equal(normalizeAlert({ type: "twitch", event: "made_up", chatname: "X", chatmessage: "hello" }, config), null);
 });
 
+test("accepts SSN panel cheer variants and production hype train payloads", () => {
+  const panelBits = normalizeAlert({ type: "tiktok", event: "cheer", chatname: "Riftwalker", hasDonation: "350 Diamonds", meta: { bits: 500 } }, config);
+  const hype = normalizeAlert({ type: "twitch", event: "hype_train", meta: { id: "train-1", broadcasterUserName: "Channel", phase: "progress", level: 3, progress: 1680, goal: 2000 } }, config);
+  assert.equal(panelBits.type, "bits");
+  assert.equal(panelBits.count, 500);
+  assert.equal(hype.type, "hype-train");
+  assert.equal(hype.tier, "major");
+  assert.equal(hype.user, "Channel");
+  assert.equal(hype.metadata.level, 3);
+  assert.match(hype.message, /1,680 \/ 2,000/);
+});
+
 test("uses stable native IDs and safe bounded fields", () => {
   const alert = normalizeAlert({ id: "native-7", type: "twitch", event: "raid", chatname: "<b>Raid</b>", chatimg: "javascript:bad", chatmessage: "<script>x</script>Hello", meta: { viewers: 42 } }, config);
   assert.equal(alert.id, "native-7");

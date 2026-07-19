@@ -6,7 +6,7 @@ export const DEFAULT_ALERT_CONFIG = Object.freeze({
   minorPriority: 100, standardPriority: 200, majorPriority: 300,
   sound: true, volume: 0.24, minorVolume: 0.42, standardVolume: 0.62, majorVolume: 0.8,
   showAvatar: true, showPlatform: true, debug: false, mock: false, reduceMotion: false,
-  server: false, maxQueue: 30
+  server: true, maxQueue: 30
 });
 
 export function parseAlertsConfig({ hash = "", search = "", hostname = "", mediaReduceMotion = false, allowQueryFallback } = {}) {

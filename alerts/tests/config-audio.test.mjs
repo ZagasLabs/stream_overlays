@@ -16,9 +16,10 @@ test("clamps alert durations and volumes", () => {
   assert.equal(config.scale, 1.5);
 });
 
-test("server transport is opt-in and ignores unsafe non-boolean values", () => {
-  assert.equal(parseAlertsConfig({ hash: "#mock=1" }).server, false);
-  assert.equal(parseAlertsConfig({ hash: "#mock=1&server=wss://attacker.invalid" }).server, false);
+test("server transport defaults on, can be disabled, and ignores unsafe non-boolean values", () => {
+  assert.equal(parseAlertsConfig({ hash: "#mock=1" }).server, true);
+  assert.equal(parseAlertsConfig({ hash: "#mock=1&server=0" }).server, false);
+  assert.equal(parseAlertsConfig({ hash: "#mock=1&server=wss://attacker.invalid" }).server, true);
 });
 
 test("procedural sounds are finite, bounded, and tiered", () => {

@@ -178,10 +178,11 @@ function avatarFallback(user) {
 }
 
 function labelFor(alert) {
-  return ({ follow: "NEW FOLLOW", subscription: "NEW SUB", resubscription: "RESUB", membership: "NEW MEMBER", gift: "COMMUNITY GIFT", raid: "INCOMING RAID", donation: "SUPPORT", bits: "BITS", superchat: "SUPER CHAT", milestone: "MILESTONE", "generic-event": "STREAM EVENT" })[alert.type] || "STREAM EVENT";
+  return ({ follow: "NEW FOLLOW", subscription: "NEW SUB", resubscription: "RESUB", membership: "NEW MEMBER", gift: "COMMUNITY GIFT", raid: "INCOMING RAID", donation: "SUPPORT", bits: "BITS", superchat: "SUPER CHAT", "hype-train": "HYPE TRAIN", milestone: "MILESTONE", "generic-event": "STREAM EVENT" })[alert.type] || "STREAM EVENT";
 }
 
 function emphasisFor(alert) {
+  if (alert.type === "hype-train" && alert.metadata.level) return `LEVEL ${alert.metadata.level}`;
   if (alert.amount) return alert.currency && !alert.amount.toUpperCase().includes(alert.currency) ? `${alert.amount} ${alert.currency}` : alert.amount;
   if (alert.count) return `${alert.count.toLocaleString()} ${alert.type === "raid" ? "VIEWERS" : "GIFTS"}`;
   return "";

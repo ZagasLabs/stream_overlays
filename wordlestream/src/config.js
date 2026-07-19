@@ -4,7 +4,7 @@ export const DEFAULT_WORDLE_CONFIG = Object.freeze({
   lang: "en", commands: ["!w", "!word"], maxAttempts: 6, wordLength: 5,
   userCooldown: 10_000, globalCooldown: 1_500, maxQueue: 20, accents: "fold",
   sound: false, volume: 0.15, accent: "#f20d69", scale: 1,
-  debug: false, mock: false, reduceMotion: false, showPlatform: true, showParticipant: true
+  debug: false, mock: false, server: true, reduceMotion: false, showPlatform: true, showParticipant: true
 });
 
 export function parseWordleConfig({ hash = "", search = "", hostname = "", mediaReduceMotion = false, allowQueryFallback } = {}) {
@@ -30,6 +30,7 @@ export function parseWordleConfig({ hash = "", search = "", hostname = "", media
     scale: parseFloatRange(get("scale"), DEFAULT_WORDLE_CONFIG.scale, 0.7, 1.4),
     debug: parseBool(get("debug"), false),
     mock,
+    server: parseBool(get("server"), DEFAULT_WORDLE_CONFIG.server),
     reduceMotion: parseMotion(get("reduceMotion"), mediaReduceMotion),
     showPlatform: parseBool(get("showPlatform"), true),
     showParticipant: parseBool(get("showParticipant"), true),

@@ -30,21 +30,25 @@ if (!config.valid) {
   startMockMode();
 } else {
   // SSN broadcasts general chat traffic to the official dock label.
-  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "dock" });
-  client.addEventListener("message", (event) => ingest(event.detail));
+  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "dock", server: config.server });
+  client.addEventListener("payload", (event) => ingest(event.detail.payload, event.detail.transport));
+  client.addEventListener("diagnostic", (event) => {
+    if (event.detail.reason !== "unsupported-envelope") showDebug(`${event.detail.transport.toUpperCase()}: ${event.detail.reason}.`);
+  });
   client.addEventListener("status", (event) => showDebug(event.detail.message));
   client.start();
 }
 
 window.addEventListener("pagehide", () => client?.stop(), { once: true });
 
-function ingest(raw) {
+function ingest(raw, transport = "local") {
   const message = normalizeIncoming(raw);
   if (!message) {
     showDebug(`Ignored payload (${summarizePayloadShape(raw)}).`);
     return;
   }
   layout.add(message, renderMessage(message, config));
+  showDebug(`${transport.toUpperCase()}: message received.`);
   updateDebugStats();
 }
 
@@ -112,4 +116,6 @@ function showDebug(message, force = false) {
   const line = document.createElement("p");
   line.textContent = message;
   debugPanel.append(line);
+  const lines = debugPanel.querySelectorAll("p");
+  for (let index = 0; index < lines.length - 24; index += 1) lines[index].remove();
 }

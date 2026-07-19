@@ -83,6 +83,8 @@ Reduce motion manually:
 #session=SESSION_ID&reduceMotion=1
 ```
 
+Chat listens through both SSN P2P and channel 4 by default. This is intentional: enabling SSN's **Send chat messages to API server** switch moves normal chat off P2P. Leave the switch in either state; the overlay follows it automatically and suppresses cross-transport duplicates. Use `server=0` only as a temporary P2P-only diagnostic.
+
 ## Cache And Privacy
 
 If OBS keeps an old version loaded, open OBS Settings, find Browser Source cache controls, and clear the browser cache. Restart OBS if needed.
