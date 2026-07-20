@@ -32,7 +32,7 @@ test("uses the official dock label for general chat and game traffic", () => {
   assert.equal(new SocialStreamClient({ session: "NON_SECRET_TEST" }).label, "dock");
   assert.equal(new SocialStreamClient({ session: "NON_SECRET_TEST" }).server, true);
   assert.equal(new SocialStreamClient({ session: "NON_SECRET_TEST", label: " !!! " }).label, "dock");
-  assert.deepEqual(new SocialStreamClient({ session: "NON_SECRET_TEST", labels: ["alerts", "dock", "alerts"] }).labels, ["alerts", "dock"]);
+  assert.deepEqual(new SocialStreamClient({ session: "NON_SECRET_TEST", labels: ["alerts", "dock", "meta", "alerts"] }).labels, ["alerts", "dock", "meta"]);
 });
 
 test("retains the known-good f284ccd chat receiver with current dock routing", () => {
@@ -58,21 +58,24 @@ test("known-good chat bridge accepts only its trusted VDO frame", () => {
   assert.equal(received[0].chatmessage, "hello");
 });
 
-test("dual alert bridges accept both labels and deduplicate their shared event", () => {
+test("alert bridges accept the metadata route and deduplicate all shared routes", () => {
   const alertsWindow = {};
   const dockWindow = {};
-  const client = new SocialStreamClient({ session: "NON_SECRET_TEST", labels: ["alerts", "dock"], debug: true });
+  const metaWindow = {};
+  const client = new SocialStreamClient({ session: "NON_SECRET_TEST", labels: ["alerts", "dock", "meta"], debug: true });
   client.iframes = [
     { contentWindow: alertsWindow, dataset: { ssnLabel: "alerts" } },
-    { contentWindow: dockWindow, dataset: { ssnLabel: "dock" } }
+    { contentWindow: dockWindow, dataset: { ssnLabel: "dock" } },
+    { contentWindow: metaWindow, dataset: { ssnLabel: "meta" } }
   ];
   const received = [];
   client.addEventListener("payload", (event) => received.push(event.detail));
   const payload = { id: "hype-1", type: "twitch", event: "hype_train", meta: { level: 2 } };
-  client.handleMessage({ origin: SSN_ORIGIN, source: alertsWindow, data: { dataReceived: { overlayNinja: payload } } });
+  client.handleMessage({ origin: SSN_ORIGIN, source: metaWindow, data: { dataReceived: { overlayNinja: payload } } });
   client.handleMessage({ origin: SSN_ORIGIN, source: dockWindow, data: { dataReceived: { overlayNinja: { ...payload } } } });
+  client.handleMessage({ origin: SSN_ORIGIN, source: alertsWindow, data: { dataReceived: { overlayNinja: { ...payload } } } });
   assert.equal(received.length, 1);
-  assert.equal(received[0].transport, "p2p:alerts");
+  assert.equal(received[0].transport, "p2p:meta");
 });
 
 test("chat keeps P2P primary while channel 4 provides a deduplicated fallback", () => {
@@ -122,7 +125,7 @@ test("entrypoints retain the isolated chat bridge and routed overlay labels", as
   ]);
   assert.match(chat, /ChatSocialStreamClient/);
   assert.match(wordle, /label:\s*"dock"/);
-  assert.match(alerts, /labels:\s*\["alerts",\s*"dock"\]/);
+  assert.match(alerts, /labels:\s*\["alerts",\s*"dock",\s*"meta"\]/);
 });
 
 test("flattens official batches, wrappers, and content endpoint envelopes", () => {

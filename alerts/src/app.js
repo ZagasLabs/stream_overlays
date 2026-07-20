@@ -5,6 +5,7 @@ import { parseAlertsConfigFromLocation } from "./config.js";
 import { ALERT_FIXTURES, STREAMPLACE_MOCK_ALERT } from "./mock-fixtures.js";
 import { alertDuration, analyzeAlertPayload } from "./normalizer.js";
 import { AlertQueue } from "./queue.js";
+import { TwitchFollowHealth } from "./source-health.js";
 
 const config = parseAlertsConfigFromLocation(window.location);
 const stage = document.querySelector("#stage");
@@ -17,6 +18,7 @@ let active = null;
 let fixtureCounter = 0;
 let client = null;
 const debugCounters = { raw: 0, event: 0, chat: 0, ignored: 0 };
+const twitchFollowHealth = new TwitchFollowHealth();
 const MAX_DEBUG_ENTRIES = 60;
 
 document.documentElement.dataset.position = config.position;
@@ -33,8 +35,9 @@ if (!config.valid) {
 } else if (config.mock) {
   startMockMode();
 } else {
-  // Current SSN targets alerts explicitly; dock also covers older capture paths.
-  client = new SocialStreamClient({ session: config.session, debug: config.debug, labels: ["alerts", "dock"], server: config.server });
+  // SSN uses several routing labels: alerts for its alert box, dock for general
+  // events, and meta for metadata-only updates such as Twitch Hype Train.
+  client = new SocialStreamClient({ session: config.session, debug: config.debug, labels: ["alerts", "dock", "meta"], server: config.server });
   client.addEventListener("payload", (event) => ingest(event.detail.payload, event.detail.transport));
   client.addEventListener("raw", (event) => logRawPayload(event.detail));
   client.addEventListener("diagnostic", (event) => logTransportDiagnostic(event.detail));
@@ -63,6 +66,7 @@ window.addEventListener("pagehide", () => {
 function ingest(payload, transport = "local") {
   const analysis = analyzeAlertPayload(payload, config);
   logClassification(analysis, transport);
+  logSourceHealth(analysis, transport);
   if (!analysis.alert) return showDiagnostic(`Ignored: ${analysis.reason} (${safeShape(payload)}).`);
   enqueue(analysis.alert);
 }
@@ -333,6 +337,9 @@ function initializeDebugPanel() {
   clear.addEventListener("click", () => {
     document.querySelector("#transport-log")?.replaceChildren();
     for (const key of Object.keys(debugCounters)) debugCounters[key] = 0;
+    twitchFollowHealth.reset();
+    const followStatus = document.querySelector("#follow-health");
+    if (followStatus) followStatus.textContent = "Twitch follow path: waiting for data.";
     updateDebugStatus();
   });
   const log = document.createElement("div");
@@ -344,7 +351,11 @@ function initializeDebugPanel() {
   const controls = document.createElement("section");
   controls.id = "mock-controls";
   controls.className = "mock-controls";
-  debugPanel.append(title, counts, status, clear, log, controls);
+  const followStatus = document.createElement("span");
+  followStatus.id = "follow-health";
+  followStatus.className = "debug-counts";
+  followStatus.textContent = "Twitch follow path: waiting for data.";
+  debugPanel.append(title, counts, status, followStatus, clear, log, controls);
   updateDebugStatus();
 }
 
@@ -374,6 +385,16 @@ function logClassification(analysis, transport) {
     transport,
     summary: `${analysis.kind.toUpperCase()} · ${source}/${event}${target} · ${analysis.reason}`
   });
+}
+
+function logSourceHealth(analysis, transport) {
+  if (!config.debug) return;
+  const observation = twitchFollowHealth.observe(analysis);
+  if (!observation) return;
+  const followStatus = document.querySelector("#follow-health");
+  if (followStatus) followStatus.textContent = observation.message;
+  logDebugEntry({ kind: "status", transport, summary: observation.message });
+  if (observation.state === "count-only-increase") showDiagnostic(observation.message);
 }
 
 function logDebugEntry({ kind, transport = "client", timestamp = Date.now(), summary, detail = "" }) {
