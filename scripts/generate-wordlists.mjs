@@ -32,10 +32,10 @@ function generate(language, sourcePath) {
   const normalized = sourceWords.map((word) => normalize(word, language)).filter((word) => word && [...word].length >= 4 && [...word].length <= 8);
   const accepted = [...new Set([...answers[language], ...normalized])].slice(0, 10_000);
   const prefix = language.toUpperCase();
-  const contents = `// Adapted from FrequencyWords 2018 (${language}), CC BY-SA 4.0. See wordlestream/data/NOTICE.md.\n` +
+  const contents = `// Adapted from FrequencyWords 2018 (${language}), CC BY-SA 4.0. See words/data/NOTICE.md.\n` +
     `export const ${prefix}_ANSWERS = Object.freeze(${JSON.stringify([...new Set(answers[language])])});\n` +
     `export const ${prefix}_ACCEPTED = Object.freeze(${JSON.stringify(accepted)});\n`;
-  writeFileSync(resolve(`wordlestream/data/${language}.js`), contents);
+  writeFileSync(resolve(`words/data/${language}.js`), contents);
 }
 
 function normalize(word, language) {

@@ -20,7 +20,7 @@ All overlays use a hidden VDO.Ninja iframe bridge. The modern shared client join
 
 Chat is isolated from changes to the newer overlays. Its primary receiver keeps the proven `f284ccd` P2P semantics (`push=false`) plus the current `dock` label, while channel 4 remains an additive fallback. The regression appeared after that disabled parameter had been changed into a present-but-empty `push` flag, which enables publishing in VDO.Ninja. Restoring receiver semantics removes that suspect change from the working chat path.
 
-Labels are routing addresses, not harmless application names. Chat and WordleStream use the official `dock` label because SSN's general `sendDataP2P` path forwards chat traffic there. Alerts opens three bounded, view-only receivers: `alerts` for SSN's alert-box route, `dock` for general events, and `meta` for metadata-only updates such as Twitch Hype Train. SSN's background relay explicitly targets every payload containing `meta` to the `meta` label, even when its **Exclude alerts from dock** setting suppresses the general Dock copy. Cross-label duplicates are suppressed. Do not replace these with invented labels such as `chat` or `wordle`.
+Labels are routing addresses, not harmless application names. Chat and !Words use the official `dock` label because SSN's general `sendDataP2P` path forwards chat traffic there. Alerts opens three bounded, view-only receivers: `alerts` for SSN's alert-box route, `dock` for general events, and `meta` for metadata-only updates such as Twitch Hype Train. SSN's background relay explicitly targets every payload containing `meta` to the `meta` label, even when its **Exclude alerts from dock** setting suppresses the general Dock copy. Cross-label duplicates are suppressed. Do not replace these with invented labels such as `chat` or `words`.
 
 Trusted iframe messages must match both `https://vdo.socialstream.ninja` and the bridge iframe's `contentWindow`. The client accepts `dataReceived.overlayNinja`, `overlayNinja`, and `sendData.overlayNinja`; generic VDO control traffic is rejected.
 
@@ -36,7 +36,7 @@ Official or adapter-confirmed fields used by the overlays are `id`, `timestamp`,
 
 `meta` is platform-specific. Confirmed examples include YouTube `channelId`, Twitch `bits`, gift totals and raid viewers, Kick `amount`/`currency`/`supporter`, native `messageId`, and reply metadata. Alert event aliases may also appear under `meta.event`, `meta.eventType`, `meta.eventSubType`, `meta.originalEventType`, `meta.rawType`, `meta.alertType`, or `meta.eventName`.
 
-Display names are fallback identities only; WordleStream prefers `userid`, YouTube `meta.channelId`, or Streamplace identity metadata when present. Broadcaster/owner/moderator roles are trusted only when delivered as booleans by an adapter. This includes SSN Twitch WebSocket's strict `mod: true`, which it derives from moderator or broadcaster badge tags. Badge labels, role strings, and free text never grant admin rights.
+Display names are fallback identities only; !Words prefers `userid`, YouTube `meta.channelId`, or Streamplace identity metadata when present. Broadcaster/owner/moderator roles are trusted only when delivered as booleans by an adapter. This includes SSN Twitch WebSocket's strict `mod: true`, which it derives from moderator or broadcaster badge tags. Badge labels, role strings, and free text never grant admin rights.
 
 ## Event handling and diagnostics
 

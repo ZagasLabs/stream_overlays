@@ -7,10 +7,10 @@ const root = resolve(process.cwd());
 const required = [
   "index.html", "chat/index.html", "src/app.js", "src/config.js", "src/ssn-client.js", "src/sanitizer.js",
   "shared/ssn/client.js", "shared/security/sanitizer.js", "shared/security/secret-scan.js",
-  "wordlestream/index.html", "wordlestream/src/app.js", "wordlestream/src/game.js", "wordlestream/data/en.js", "wordlestream/data/es.js", "wordlestream/data/NOTICE.md", "wordlestream/README.md",
+  "words/index.html", "words/src/app.js", "words/src/game.js", "words/data/en.js", "words/data/es.js", "words/data/NOTICE.md", "words/README.md",
   "alerts/index.html", "alerts/src/app.js", "alerts/src/normalizer.js", "alerts/src/queue.js", "alerts/src/audio-engine.js", "alerts/src/sound-manifest.js", "alerts/assets/sounds/manifest.json", "alerts/README.md",
   "scripts/dev-server.mjs", "scripts/print-url.mjs", "scripts/build-pages.mjs", "scripts/check.mjs",
-  "docs/ssn-integration.md", "docs/alerts-capability-matrix.md", "docs/obs-wordlestream.md", "docs/obs-alerts.md", "docs/security.md", "docs/licenses.md",
+  "docs/ssn-integration.md", "docs/alerts-capability-matrix.md", "docs/obs-words.md", "docs/obs-alerts.md", "docs/security.md", "docs/licenses.md",
   "README.md", ".github/workflows/pages.yml", ".nojekyll"
 ];
 const failures = [];
@@ -42,7 +42,7 @@ console.log("Preflight passed: required files, secrets, storage, runtime depende
 
 function scanBrowserStorage(file, content) {
   if (!/\b(localStorage|sessionStorage)\b/.test(content)) return;
-  const allowed = new Set(["wordlestream/src/app.js", "wordlestream/src/persistence.js", "wordlestream/README.md", "docs/obs-wordlestream.md", "README.md"]);
+  const allowed = new Set(["words/src/app.js", "words/src/persistence.js", "words/README.md", "docs/obs-words.md", "README.md"]);
   if (!allowed.has(file)) failures.push(`Disallowed browser storage reference in ${file}`);
   if (/setItem\([^)]*session/i.test(content)) failures.push(`Possible session persistence in ${file}`);
 }

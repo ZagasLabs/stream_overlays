@@ -1,10 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseAdmins, parseWordleConfig } from "../src/config.js";
+import { parseAdmins, parseWordsConfig } from "../src/config.js";
 import { isAdmin, normalizeSubmission } from "../src/input.js";
 
-test("validates and clamps Wordle fragment settings", () => {
-  const config = parseWordleConfig({ hash: "#session=abc_123&lang=es&command=!g,!palabra&maxAttempts=99&wordLength=5&userCooldown=0&globalCooldown=99&admins=twitch:Owner,bad:value&sound=1&volume=9&scale=.2&reduceMotion=1" });
+test("validates and clamps Words fragment settings", () => {
+  const config = parseWordsConfig({ hash: "#session=abc_123&lang=es&command=!g,!palabra&maxAttempts=99&wordLength=5&userCooldown=0&globalCooldown=99&admins=twitch:Owner,bad:value&sound=1&volume=9&scale=.2&reduceMotion=1" });
   assert.equal(config.session, "abc_123");
   assert.deepEqual(config.commands, ["!g", "!palabra"]);
   assert.equal(config.maxAttempts, 10);
@@ -16,8 +16,8 @@ test("validates and clamps Wordle fragment settings", () => {
   assert.equal(config.server, true);
 });
 
-test("Wordle channel 4 fallback can be disabled explicitly", () => {
-  assert.equal(parseWordleConfig({ hash: "#mock=1&server=0" }).server, false);
+test("Words channel 4 fallback can be disabled explicitly", () => {
+  assert.equal(parseWordsConfig({ hash: "#mock=1&server=0" }).server, false);
 });
 
 test("admin list rejects malformed entries", () => {
@@ -34,13 +34,13 @@ test("authorization requires verified role metadata or configured exact identity
 });
 
 test("normalizes guesses and admin commands with strong platform identity", () => {
-  const config = parseWordleConfig({ hash: "#mock=1&admins=youtube:channel-7" });
+  const config = parseWordsConfig({ hash: "#mock=1&admins=youtube:channel-7" });
   const guess = normalizeSubmission({ type: "youtube", chatname: "Viewer", userid: "channel-7", chatmessage: "!w CRANE" }, config);
   assert.equal(guess.identity, "youtube:channel-7");
   assert.equal(guess.guess, "crane");
-  const admin = normalizeSubmission({ type: "youtube", chatname: "Viewer", userid: "channel-7", chatmessage: "!word pause" }, config);
+  const admin = normalizeSubmission({ type: "youtube", chatname: "Viewer", userid: "channel-7", chatmessage: "!words pause" }, config);
   assert.equal(admin.authorized, true);
 
-  const twitchBroadcaster = normalizeSubmission({ type: "twitch", chatname: "Owner", mod: true, chatmessage: "!word new" }, config);
+  const twitchBroadcaster = normalizeSubmission({ type: "twitch", chatname: "Owner", mod: true, chatmessage: "!words new" }, config);
   assert.deepEqual({ kind: twitchBroadcaster.kind, action: twitchBroadcaster.action, authorized: twitchBroadcaster.authorized }, { kind: "admin", action: "new", authorized: true });
 });

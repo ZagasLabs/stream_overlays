@@ -1,5 +1,5 @@
 export function storageKey(lang, wordLength) {
-  return `wordlestream:v1:${lang}:${wordLength}`;
+  return `words:v1:${lang}:${wordLength}`;
 }
 
 export function saveGame(storage, key, state) {

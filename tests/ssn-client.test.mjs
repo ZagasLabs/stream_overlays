@@ -118,13 +118,13 @@ test("deduplicates the same payload arriving over P2P and channel 4", () => {
 });
 
 test("entrypoints retain the isolated chat bridge and routed overlay labels", async () => {
-  const [chat, wordle, alerts] = await Promise.all([
+  const [chat, words, alerts] = await Promise.all([
     readFile(new URL("../src/app.js", import.meta.url), "utf8"),
-    readFile(new URL("../wordlestream/src/app.js", import.meta.url), "utf8"),
+    readFile(new URL("../words/src/app.js", import.meta.url), "utf8"),
     readFile(new URL("../alerts/src/app.js", import.meta.url), "utf8")
   ]);
   assert.match(chat, /ChatSocialStreamClient/);
-  assert.match(wordle, /label:\s*"dock"/);
+  assert.match(words, /label:\s*"dock"/);
   assert.match(alerts, /labels:\s*\["alerts",\s*"dock",\s*"meta"\]/);
 });
 

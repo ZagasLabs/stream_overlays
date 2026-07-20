@@ -12,14 +12,14 @@ for (const path of [
   "index.html", "chat/index.html", ".nojekyll", "assets",
   "src/app.js", "src/config.js", "src/ssn-client.js", "src/message-normalizer.js", "src/message-renderer.js", "src/layout-manager.js", "src/sanitizer.js", "src/styles.css",
   "shared/config.js", "shared/hash.js", "shared/platform.js", "shared/security/sanitizer.js", "shared/ssn/client.js", "shared/design/tokens.css",
-  "wordlestream/index.html", "wordlestream/src", "wordlestream/assets", "wordlestream/data",
+  "words/index.html", "words/src", "words/assets", "words/data",
   "alerts/index.html", "alerts/src", "alerts/assets/mark.svg", "alerts/assets/sounds/manifest.json"
 ]) copy(path);
 
 copyCustomSounds();
 stampStaticReferences();
 
-console.log("GitHub Pages artifact built in dist/ (chat, wordlestream, alerts).");
+console.log("GitHub Pages artifact built in dist/ (chat, words, alerts).");
 validatePages(output);
 
 function copy(relativePath) {

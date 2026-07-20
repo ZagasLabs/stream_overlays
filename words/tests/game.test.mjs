@@ -5,8 +5,11 @@ import { CooperativeWordGame, normalizeWord, parseChatCommand, scoreGuess } from
 const words = ["crane", "slate", "allee", "apple", "civic", "juego", "noche", "sueño"];
 const makeGame = (options = {}) => new CooperativeWordGame({ answers: ["apple"], accepted: words, answer: "apple", wordLength: 5, maxAttempts: 6, userCooldown: 1000, globalCooldown: 100, ...options });
 
-test("parses configured commands and safely normalizes language", () => {
-  assert.deepEqual(parseChatCommand("!w CRANE", ["!w", "!word"]), { command: "!w", argument: "CRANE" });
+test("parses the primary command and compatible aliases, and safely normalizes language", () => {
+  const commands = ["!words", "!w", "!word"];
+  assert.deepEqual(parseChatCommand("!words CRANE", commands), { command: "!words", argument: "CRANE" });
+  assert.deepEqual(parseChatCommand("!w CRANE", commands), { command: "!w", argument: "CRANE" });
+  assert.deepEqual(parseChatCommand("!word CRANE", commands), { command: "!word", argument: "CRANE" });
   assert.equal(parseChatCommand("CRANE", ["!w"]), null);
   assert.equal(normalizeWord(" SUEÑO ", "fold"), "sueño");
   assert.equal(normalizeWord("rápido", "fold"), "rapido");

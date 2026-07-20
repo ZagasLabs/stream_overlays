@@ -8,7 +8,7 @@ Run `npm run mock:alerts` and open `http://127.0.0.1:8765/alerts/#mock=1&debug=1
 
 ## Live transport and endpoint tests
 
-Normal SSN platform traffic uses hidden, view-only VDO.Ninja P2P bridges. Labels are SSN routing addresses: Chat and WordleStream use `dock`; Alerts listens to `alerts`, the compatible `dock` event path, and the `meta` path used for metadata-only events such as Hype Train, then suppresses duplicates. Arbitrary per-app labels do not receive general traffic.
+Normal SSN platform traffic uses hidden, view-only VDO.Ninja P2P bridges. Labels are SSN routing addresses: Chat and !Words use `dock`; Alerts listens to `alerts`, the compatible `dock` event path, and the `meta` path used for metadata-only events such as Hype Train, then suppresses duplicates. Arbitrary per-app labels do not receive general traffic.
 
 The channel-4 receiver is also enabled by default because SSN's **Send chat messages to API server** switch moves general traffic away from P2P. No extra production parameter is needed:
 

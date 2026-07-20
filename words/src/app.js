@@ -1,12 +1,12 @@
 import { platformPresentation } from "../../shared/platform.js";
 import { SocialStreamClient } from "../../shared/ssn/client.js";
-import { parseWordleConfigFromLocation } from "./config.js";
+import { parseWordsConfigFromLocation } from "./config.js";
 import { getDictionary } from "./dictionary.js";
 import { CooperativeWordGame } from "./game.js";
 import { normalizeSubmission } from "./input.js";
 import { loadGame, saveGame, storageKey } from "./persistence.js";
 
-let config = parseWordleConfigFromLocation(window.location);
+let config = parseWordsConfigFromLocation(window.location);
 let game = createGame(config.lang);
 let latestAttemptCount = game.attempts.length;
 let audioContext = null;
@@ -24,7 +24,7 @@ const debugPanel = document.querySelector("#debug-panel");
 const gamePanel = document.querySelector(".game-panel");
 
 document.documentElement.style.setProperty("--overlay-accent", config.accent);
-document.documentElement.style.setProperty("--wordle-scale", String(config.scale));
+document.documentElement.style.setProperty("--words-scale", String(config.scale));
 document.documentElement.dataset.reduceMotion = config.reduceMotion ? "1" : "0";
 render();
 scheduleInstability();
@@ -188,7 +188,7 @@ function startMockMode() {
 function buildDebugControls() {
   debugPanel.hidden = false;
   const title = document.createElement("strong");
-  title.textContent = "WORDLESTREAM LAB";
+  title.textContent = "!WORDS LAB";
   debugPanel.append(title);
   const fixtures = [
     ["EN valid", () => switchLanguage("en", "crane")],
@@ -214,7 +214,7 @@ function buildDebugControls() {
   const glitchButton = document.createElement("button");
   glitchButton.type = "button";
   glitchButton.textContent = "Glitch pulse";
-  glitchButton.setAttribute("aria-label", "Trigger a brief WordleStream glitch preview");
+  glitchButton.setAttribute("aria-label", "Trigger a brief !Words glitch preview");
   glitchButton.addEventListener("click", triggerInstability);
   debugPanel.append(glitchButton);
   window.addEventListener("keydown", (event) => {

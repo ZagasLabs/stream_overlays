@@ -7,8 +7,8 @@ Incoming SSN names, messages, badges, event text, avatars, image URLs, metadata,
 - Text is normalized, stripped of markup, length-bounded, and rendered with `textContent`/text nodes.
 - The sanitizer converts only verified `<img>` emotes into explicit nodes. Scripts, iframes, styles, arbitrary tags, inline handlers, unsafe protocols, malformed URLs, and non-local HTTP images are rejected.
 - Fragment values are enum/number/color/token validated and never used as HTML, CSS text, or file paths.
-- Wordle queues, cooldown maps, participants, attempts, alert queues, dedupe maps, DOM nodes, timers, and audio nodes are bounded and cleaned up.
-- Wordle localStorage contains only versioned game state under a session-independent key. Alerts and chat use no browser storage.
+- !Words queues, cooldown maps, participants, attempts, alert queues, dedupe maps, DOM nodes, timers, and audio nodes are bounded and cleaned up.
+- !Words localStorage contains only versioned game state under a session-independent key. Alerts and chat use no browser storage.
 - Admin access requires adapter boolean role metadata or an exact configured platform identity. Free-text roles and badges cannot grant control.
 - Unknown alert events and Streamplace production alert claims fail closed.
 - Alerts server mode is a boolean opt-in and connects only to the fixed official SSN WebSocket endpoint; fragments cannot supply a socket URL. Its debug log is memory-only, bounded to 60 entries, rendered with text nodes, and redacts session/room/API credential fields before display.

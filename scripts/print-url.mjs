@@ -76,7 +76,7 @@ function ensureTrailingSlash(value) {
 function sanitizeApp(value) {
   const appName = String(value || "").trim().replace(/^\/+|\/+$/g, "");
   if (!appName) return "";
-  if (!["chat", "wordlestream", "alerts"].includes(appName)) fail("Unknown overlay app. Use chat, wordlestream or alerts.");
+  if (!["chat", "words", "alerts"].includes(appName)) fail("Unknown overlay app. Use chat, words or alerts.");
   return appName;
 }
 

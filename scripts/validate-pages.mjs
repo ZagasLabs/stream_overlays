@@ -6,7 +6,7 @@ export function validatePages(output = resolve(process.cwd(), "dist")) {
   const failures = [];
   const files = walk(output);
   const relativeFiles = new Set(files.map((file) => relative(output, file).replaceAll("\\", "/")));
-  for (const required of ["index.html", "chat/index.html", "wordlestream/index.html", "alerts/index.html", "shared/ssn/client.js"]) {
+  for (const required of ["index.html", "chat/index.html", "words/index.html", "alerts/index.html", "shared/ssn/client.js"]) {
     if (!relativeFiles.has(required)) failures.push(`Artifact missing ${required}`);
   }
   for (const file of files) {

@@ -4,18 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="referrer" content="no-referrer">
-    <title>WordleStream Overlay</title>
+    <title>!Words Overlay</title>
     <link rel="stylesheet" href="../shared/design/tokens.css">
     <link rel="stylesheet" href="./src/styles.css">
   </head>
   <body>
-    <main id="overlay" class="wordle-overlay" aria-live="polite">
+    <main id="overlay" class="words-overlay" aria-live="polite">
       <section class="game-panel" aria-label="Cooperative word guessing game">
         <span class="panel-scar" aria-hidden="true"><i></i><i></i><i></i></span>
         <span class="panel-cross" aria-hidden="true">×</span>
         <span class="panel-tape" aria-hidden="true"></span>
         <header class="game-header">
-          <div><span class="eyebrow" data-glitch="CO-OP WORD // LIVE">CO-OP WORD // LIVE</span><h1 data-glitch="WordleStream">WordleStream</h1></div>
+          <div><span class="eyebrow" data-glitch="CO-OP WORD // LIVE">CO-OP WORD // LIVE</span><h1 data-glitch="!Words">!Words</h1></div>
           <div id="round-state" class="round-state">READY</div>
         </header>
         <div id="board" class="board" role="grid" aria-label="Guess board"></div>
@@ -25,7 +25,7 @@
         </footer>
         <div id="result" class="result" hidden></div>
       </section>
-      <aside id="debug-panel" class="debug-panel" hidden aria-label="WordleStream mock and debug controls"></aside>
+      <aside id="debug-panel" class="debug-panel" hidden aria-label="!Words mock and debug controls"></aside>
       <div id="diagnostic" class="diagnostic" hidden></div>
     </main>
     <script type="module" src="./src/app.js"></script>
