@@ -36,8 +36,10 @@ export function platformIdentity(payload = {}) {
 export function verifiedRoles(payload = {}) {
   const meta = payload.meta && typeof payload.meta === "object" && !Array.isArray(payload.meta) ? payload.meta : {};
   return {
-    broadcaster: payload.broadcaster === true || payload.owner === true || meta.broadcaster === true || meta.isBroadcaster === true,
-    moderator: payload.moderator === true || meta.moderator === true || meta.isModerator === true
+    broadcaster: payload.broadcaster === true || payload.owner === true || payload.isBroadcaster === true || meta.broadcaster === true || meta.isBroadcaster === true,
+    // SSN's Twitch WebSocket adapter emits strict boolean `mod: true` for
+    // moderator and broadcaster badges. Never trust role strings or labels.
+    moderator: payload.moderator === true || payload.mod === true || payload.isModerator === true || meta.moderator === true || meta.mod === true || meta.isModerator === true
   };
 }
 

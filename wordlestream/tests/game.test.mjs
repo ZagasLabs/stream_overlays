@@ -46,6 +46,29 @@ test("tracks victory and six-attempt loss", () => {
   assert.equal(loss.status, "lost");
 });
 
+test("admin controls recover paused and completed rounds", () => {
+  const game = makeGame({ answers: ["apple", "crane"], random: () => 0 });
+  game.submit({ guess: "slate", identity: "twitch:a" }, 0);
+  game.processNext(0);
+
+  assert.equal(game.control("pause"), true);
+  assert.equal(game.status, "paused");
+  assert.equal(game.control("resume"), true);
+  assert.equal(game.status, "active");
+
+  assert.equal(game.control("reset"), true);
+  assert.equal(game.answer, "apple");
+  assert.equal(game.attempts.length, 0);
+
+  game.submit({ guess: "apple", identity: "twitch:w" }, 2_000);
+  game.processNext(2_000);
+  assert.equal(game.status, "won");
+  assert.equal(game.control("new"), true);
+  assert.equal(game.status, "active");
+  assert.equal(game.answer, "crane");
+  assert.equal(game.attempts.length, 0);
+});
+
 test("queue is bounded and identities remain platform-separated", () => {
   const game = makeGame({ maxQueue: 1 });
   assert.equal(game.submit({ guess: "crane", identity: "twitch:same" }, 0).accepted, true);

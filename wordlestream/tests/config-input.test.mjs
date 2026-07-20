@@ -26,6 +26,9 @@ test("admin list rejects malformed entries", () => {
 
 test("authorization requires verified role metadata or configured exact identity", () => {
   assert.equal(isAdmin({ moderator: true }, "twitch:mod", []), true);
+  assert.equal(isAdmin({ mod: true }, "twitch:broadcaster", []), true);
+  assert.equal(isAdmin({ isBroadcaster: true }, "twitch:broadcaster", []), true);
+  assert.equal(isAdmin({ mod: "true" }, "twitch:pretend", []), false);
   assert.equal(isAdmin({ role: "moderator" }, "twitch:pretend", []), false);
   assert.equal(isAdmin({}, "kick:owner", ["kick:owner"]), true);
 });
@@ -37,4 +40,7 @@ test("normalizes guesses and admin commands with strong platform identity", () =
   assert.equal(guess.guess, "crane");
   const admin = normalizeSubmission({ type: "youtube", chatname: "Viewer", userid: "channel-7", chatmessage: "!word pause" }, config);
   assert.equal(admin.authorized, true);
+
+  const twitchBroadcaster = normalizeSubmission({ type: "twitch", chatname: "Owner", mod: true, chatmessage: "!word new" }, config);
+  assert.deepEqual({ kind: twitchBroadcaster.kind, action: twitchBroadcaster.action, authorized: twitchBroadcaster.authorized }, { kind: "admin", action: "new", authorized: true });
 });
