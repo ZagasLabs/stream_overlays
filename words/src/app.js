@@ -1,5 +1,5 @@
 import { platformPresentation } from "../../shared/platform.js";
-import { SocialStreamClient } from "../../shared/ssn/client.js";
+import { ChatSocialStreamClient } from "../../src/ssn-client.js";
 import { parseWordsConfigFromLocation } from "./config.js";
 import { getDictionary } from "./dictionary.js";
 import { CooperativeWordGame } from "./game.js";
@@ -34,8 +34,10 @@ if (!config.valid) {
 } else if (config.mock) {
   startMockMode();
 } else {
-  // Guesses are ordinary chat payloads, which SSN routes to the dock label.
-  client = new SocialStreamClient({ session: config.session, debug: config.debug, label: "dock", server: config.server });
+  // Guesses are ordinary chat payloads, so use the same known-good receiver as
+  // the chat overlay. Keeping these entrypoints on one transport prevents a new
+  // SSN session from routing chat successfully to one overlay but not the other.
+  client = new ChatSocialStreamClient({ session: config.session, debug: config.debug, server: config.server });
   client.addEventListener("message", (event) => ingest(event.detail));
   client.addEventListener("status", (event) => showDiagnostic(event.detail.message));
   client.start();

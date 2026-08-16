@@ -117,14 +117,15 @@ test("deduplicates the same payload arriving over P2P and channel 4", () => {
   assert.equal(payloadFingerprint({ b: 2, a: 1 }), payloadFingerprint({ a: 1, b: 2 }));
 });
 
-test("entrypoints retain the isolated chat bridge and routed overlay labels", async () => {
+test("chat and Words share the known-good chat bridge while alerts retain routed labels", async () => {
   const [chat, words, alerts] = await Promise.all([
     readFile(new URL("../src/app.js", import.meta.url), "utf8"),
     readFile(new URL("../words/src/app.js", import.meta.url), "utf8"),
     readFile(new URL("../alerts/src/app.js", import.meta.url), "utf8")
   ]);
   assert.match(chat, /ChatSocialStreamClient/);
-  assert.match(words, /label:\s*"dock"/);
+  assert.match(words, /ChatSocialStreamClient/);
+  assert.doesNotMatch(words, /new SocialStreamClient/);
   assert.match(alerts, /labels:\s*\["alerts",\s*"dock",\s*"meta"\]/);
 });
 
