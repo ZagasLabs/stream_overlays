@@ -16,12 +16,15 @@ test("rejects generic VDO.Ninja content traffic", () => {
   assert.equal(extractBridgePayload({ action: "joined" }), null);
 });
 
-test("builds an official view-only targeted bridge", () => {
+test("automatically starts a data-only targeted bridge without a hidden join prompt", () => {
   const url = new URL(buildBridgeUrl("NON_SECRET_TEST", { label: "Alerts !!" }));
   assert.equal(url.searchParams.has("push"), false);
   assert.equal(url.searchParams.get("label"), "alerts");
   assert.equal(url.searchParams.get("view"), "NON_SECRET_TEST");
   assert.equal(url.searchParams.get("room"), "NON_SECRET_TEST");
+  assert.equal(url.searchParams.get("vd"), "0");
+  assert.equal(url.searchParams.get("ad"), "0");
+  assert.equal(url.searchParams.has("autostart"), true);
   assert.equal(url.searchParams.has("novideo"), true);
   assert.equal(url.searchParams.has("noaudio"), true);
 });

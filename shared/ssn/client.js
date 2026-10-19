@@ -233,6 +233,9 @@ export function buildBridgeUrl(session, { label = "dock" } = {}) {
   for (const [key, value] of [
     ["ln", ""], ["salt", "vdo.ninja"], ["password", "false"],
     ["view", session], ["label", cleanLabel(label)],
+    // A hidden room frame otherwise waits on VDO.Ninja's join screen.
+    // Disable capture devices and join automatically for the data channel.
+    ["vd", "0"], ["ad", "0"], ["autostart", ""],
     ["novideo", ""], ["noaudio", ""], ["cleanoutput", ""],
     ["room", session]
   ]) url.searchParams.set(key, value);
